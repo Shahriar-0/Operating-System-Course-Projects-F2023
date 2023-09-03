@@ -1,0 +1,6 @@
+[submodule "archive/V1"]
+	path = archive/V1
+	url = https://github.com/PashaBarahimi/Operating-System-Projects
+[submodule "archive/V2"]
+	path = archive/V2
+	url = https://github.com/MisaghM/Operating-System-Course-Projects
