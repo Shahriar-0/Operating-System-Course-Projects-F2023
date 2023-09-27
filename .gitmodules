@@ -4,3 +4,6 @@
 [submodule "archive/V2"]
 	path = archive/V2
 	url = https://github.com/MisaghM/Operating-System-Course-Projects
+[submodule "Archive/V3"]
+	path = Archive/V3
+	url = https://github.com/SamanEN/Operating-System-Course-Projects
