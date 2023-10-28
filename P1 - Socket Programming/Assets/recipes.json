@@ -1,0 +1,32 @@
+{
+  "Kebab": {
+    "meat": 200,
+    "onion": 10
+  },
+  "Pizza": {
+    "dough": 500,
+    "cheese": 200,
+    "tomatoSauce": 150,
+    "pepperoni": 100,
+    "olives": 50
+  },
+  "Burger": {
+    "bun": 100,
+    "patty": 150,
+    "lettuce": 30,
+    "tomato": 50,
+    "cheese": 20
+  },
+  "Pasta": {
+    "pasta": 200,
+    "oliveOil": 50,
+    "garlic": 10,
+    "parmesanCheese": 20
+  },
+  "Salad": {
+    "lettuce": 50,
+    "tomato": 30,
+    "cucumber": 40,
+    "oliveOil": 20
+  }
+}
