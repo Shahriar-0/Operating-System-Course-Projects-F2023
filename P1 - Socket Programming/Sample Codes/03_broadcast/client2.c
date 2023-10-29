@@ -21,7 +21,7 @@ int main(int argc, char const *argv[]) {
 
     bc_address.sin_family = AF_INET; 
     bc_address.sin_port = htons(8080); 
-    bc_address.sin_addr.s_addr = inet_addr("192.168.1.255");
+    bc_address.sin_addr.s_addr = inet_addr("255.255.255.255");
 
     bind(sock, (struct sockaddr *)&bc_address, sizeof(bc_address));
 
