@@ -3,4 +3,8 @@
 
 #include "define.h"
 
+
+int initBroadcast(struct sockaddr_in* addrOut);
+struct sockaddr_in initBroadcastSockAddr();
+
 #endif // NETWORK_H_INCLUDE
