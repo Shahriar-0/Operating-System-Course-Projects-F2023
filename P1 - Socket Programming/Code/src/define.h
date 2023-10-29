@@ -17,15 +17,14 @@
 #include <unistd.h>
 
 // Constants
-#define BUF_NAME  32
+#define BUF_NAME 32
 #define BUF_PNAME 64
-#define BUF_CLI   128
-#define BUF_MSG   512
-#define BCAST_IP  "255.255.255.255"
-#define TIMEOUT   90
-
+#define BUF_CLI 128
+#define BUF_MSG 512
+#define BCAST_IP "255.255.255.255"
+#define TIMEOUT 90
 
 // Structs
-//TODO
+// TODO
 
-#endif
+#endif  // DEFINE_H_INCLUDE
