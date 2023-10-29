@@ -5,9 +5,10 @@ PATH_OBJ   := $(PATH_BUILD)/obj
 PATH_DEP   := $(PATH_OBJ)/__dep__
 
 include common_vars.mk
-
-OUT_EXE_CLIENT := main
-OUT_EXE_SERVER := server
+  
+OUT_EXE_CUSTOMER   := customer
+OUT_EXE_RESTAURANT := restaurant
+OUT_EXE_SUPPLIER   := supplier
 
 #----------------------------------------
 
@@ -16,19 +17,22 @@ VPATH = $(PATH_SRC)
 FILES   = $(patsubst src/%, %, $(shell find $(PATH_SRC) -name "*.c" -type f))
 FOLDERS = $(patsubst src/%, %, $(shell find $(PATH_SRC) -mindepth 1 -type d))
 
-FILES_NOMAIN = $(filter-out main.c, $(FILES))
+FILES_NOMAIN = $(filter-out restaurant.c supplier.c customer.c, $(FILES))
 
 FILES_DEP = $(patsubst %, $(PATH_DEP)/%.d, $(basename $(FILES)))
 FILES_OBJ = $(patsubst %, $(PATH_OBJ)/%.o, $(basename $(FILES_NOMAIN)))
 
 #----------------------------------------
 
-all: $(PATH_BIN)/$(OUT_EXE_CLIENT) $(PATH_BIN)/$(OUT_EXE_SERVER)
+all: $(PATH_BIN)/$(OUT_EXE_CUSTOMER) $(PATH_BIN)/$(OUT_EXE_RESTAURANT)
 
-$(PATH_BIN)/$(OUT_EXE_CLIENT): $(PATH_OBJ)/client.o $(FILES_OBJ)
+$(PATH_BIN)/$(OUT_EXE_CUSTOMER): $(PATH_OBJ)/customer.o $(FILES_OBJ)
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-$(PATH_BIN)/$(OUT_EXE_SERVER): $(PATH_OBJ)/server.o $(FILES_OBJ)
+$(PATH_BIN)/$(OUT_EXE_RESTAURANT): $(PATH_OBJ)/restaurant.o $(FILES_OBJ)
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
+$(PATH_BIN)/$(OUT_EXE_SUPPLIER): $(PATH_OBJ)/supplier.o $(FILES_OBJ)
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 
@@ -70,9 +74,10 @@ clean-exe: ; $(RMDIR) $(PATH_BIN)/*
 delete-build: ; $(RMDIR) $(PATH_BUILD)
 
 ARGS ?=
-run-client: ; @cd $(PATH_BIN) && ./$(OUT_EXE_CLIENT) $(ARGS)
-run-server: ; @cd $(PATH_BIN) && ./$(OUT_EXE_SERVER) $(ARGS)
+run-customer: ; @cd $(PATH_BIN) && ./$(OUT_EXE_CUSTOMER) $(ARGS)
+run-restaurant: ; @cd $(PATH_BIN) && ./$(OUT_EXE_RESTAURANT) $(ARGS)
+run-supplier: ; @cd $(PATH_BIN) && ./$(OUT_EXE_SUPPLIER) $(ARGS)
 
 help:
-	@echo Targets: all clean clean-obj clean-dep clean-exe delete-build run-client run-server
+	@echo Targets: all clean clean-obj clean-dep clean-exe delete-build run-customer run-restaurant run-supplier
 	@echo '(make run ARGS="arg1 arg2...")'
