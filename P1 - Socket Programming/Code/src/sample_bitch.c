@@ -59,15 +59,15 @@ int acceptClient(int server_fd) {
     return client_fd;
 }
 
-int connectServer(int port) {
+int connectServer(unsigned short port) {
     int fd;
     struct sockaddr_in server_address;
 
     fd = socket(AF_INET, SOCK_STREAM, 0);
 
     server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(9832); // ! FIXME
-    server_address.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server_address.sin_port = htons(port); // ! FIXME
+    server_address.sin_addr.s_addr = INADDR_ANY; // STH TODO
 
     if (connect(fd, (struct sockaddr *)&server_address, sizeof(server_address)) < 0) {  // checking for errors
         printf("Error in connecting to server\n");
@@ -90,10 +90,11 @@ int main(int argc, char const *argv[]) {
 
     bind(udp_conn, (struct sockaddr *)&main_addr, sizeof(main_addr));
 
-    max_sd = udp_conn;
     FD_ZERO(&master_set);
     FD_SET(STDIN_FILENO, &master_set);
+    FD_SET(tcp_conn, &master_set);
     FD_SET(udp_conn, &master_set);
+    max_sd = udp_conn;
 
     while (1) {
         rd_set = master_set;
@@ -109,20 +110,17 @@ int main(int argc, char const *argv[]) {
 
             if (!strcmp(cmd, "connect")) {
                 char* portStr = strtok(NULL, " ");
-                int port = atoi(buffer);
-                char portDebug[50];
-                sprintf(portDebug, "the read port is : %d", port);
-                int newSocket = connectServer(port);
-                FD_SET(newSocket, &master_set);
-                memset(buffer, 0, 1024);        
+                int port = atoi(portStr);
+                unsigned short usPort = (unsigned short)port;
+                int newSocket = connectServer(usPort);
                 char msg[BUF_MSG];
                 sprintf(msg, "hello, I'm now connected to you. I can be found on port: %s\n", argv[1]);
                 write(1, msg, strlen(msg));
-                sendto(newSocket, msg, strlen(msg), 0, (struct sockaddr *)&main_addr, sizeof(main_addr));
+                send(newSocket, msg, strlen(msg), 0);
                 if (newSocket > max_sd) max_sd = newSocket;
             } else {
-                int fd = (max_sd > 4) ? tcp_conn : udp_conn;
-                sendto(fd, buffer, strlen(buffer), 0, (struct sockaddr *)&main_addr, sizeof(main_addr));
+                // int fd = (max_sd > 4) ? tcp_conn : udp_conn;
+                sendto(udp_conn, buffer, strlen(buffer), 0, (struct sockaddr *)&main_addr, sizeof(main_addr));
             }
         }
 
