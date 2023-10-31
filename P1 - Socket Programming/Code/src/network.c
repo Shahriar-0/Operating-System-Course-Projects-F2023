@@ -60,7 +60,7 @@ int connectServer(unsigned short port, int* outServerSocket) {
     struct sockaddr_in addr;
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
-    addr.sin_addr.s_addr = inet_addr(LOCAL_HOST);
+    addr.sin_addr.s_addr = inet_addr(UDP_IP);
     memset(addr.sin_zero, STRING_END, sizeof(addr.sin_zero));
 
     *outServerSocket = serverId;
