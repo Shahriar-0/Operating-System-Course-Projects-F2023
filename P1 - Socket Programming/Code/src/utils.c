@@ -1,6 +1,5 @@
 #include "utils.h"
 
-
 ////////////////////// Utils //////////////////////
 void cliPrompt() { write(STDOUT_FILENO, ANSI_WHT ">> " ANSI_RST, 12); }
 
@@ -73,9 +72,8 @@ unsigned short strToPortErr(const char* str) {
     return port;
 }
 
-
 int checkUnique(char* name, char names[MAX_TOTAL][BUF_NAME], int size) {
-    for (int i = 0; i < size; i++) 
+    for (int i = 0; i < size; i++)
         if (!strcmp(name, names[i])) return 0;
     return 1;
 }
@@ -96,7 +94,6 @@ void FD_CLRER(int socket, FdSet* fdset) {
 
     logInfo("Socket removed from fdset.");
 }
-
 
 void InitFdSet(FdSet* fdset, int UDPfd) {
     logInfo("Initializing fdset.");
@@ -158,3 +155,38 @@ cJSON* loadJSON() {
     return root;
 }
 
+void deserializer(char* msg, char* name, int* port) {
+    char* token = strtok(msg, BCAST_IN_DELIM);
+    if (token == NULL) return;
+    RegisteringState state = atoi(token);
+    token = strtok(NULL, BCAST_IN_DELIM);
+    if (token == NULL) return;
+    name = token;
+    token = strtok(NULL, BCAST_IN_DELIM);
+    if (token == NULL) return;
+    port = atoi(token);
+    token = strtok(NULL, BCAST_OUT_DELIM);
+    if (token == NULL) return;
+    BroadcastType type = atoi(token);
+}
+
+void yesNoPromptSupplier(char* name, unsigned short port) {
+    char msg[BUF_MSG] = {STRING_END};
+
+    char ans[BUF_MSG];
+    getInput(STDIN_FILENO, "Accept? (y/n)", ans, BUF_MSG);
+
+    int ansFd = connectServer(port);
+
+    if (!strcmp(ans, "y")) {
+        snprintf(msg, BUF_MSG, "accepted by %s.", name);
+        logInfo(msg);
+        send(ansFd, ACCEPTED_MSG, strlen(ACCEPTED_MSG), 0);
+    } else if (!strcmp(ans, "n")) {
+        snprintf(msg, BUF_MSG, "rejected by %s.", name);
+        logInfo(msg);
+        send(ansFd, REJECTED_MSG, strlen(REJECTED_MSG), 0);
+    } else {
+        logError("Invalid answer.");
+    }
+}

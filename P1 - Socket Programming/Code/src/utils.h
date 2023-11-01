@@ -7,6 +7,8 @@
 
 // Print the prompt string.
 void cliPrompt();
+// Print a yes/no prompt to the standard output.
+void yesNoPromptSupplier(char* name, unsigned short port);
 // Print errno text representation to the standard error output.
 void errnoPrint();
 
@@ -34,6 +36,7 @@ void FD_CLRER(int socket, FdSet* fdset);
 cJSON* loadJSON();
 
 // check username uniqueness
+void deserializer(char* msg, char* name, int* port);
 int checkUnique(char* name, char names[MAX_TOTAL][BUF_NAME], int size);
 
 #endif  // UTILS_H_INCLUDE

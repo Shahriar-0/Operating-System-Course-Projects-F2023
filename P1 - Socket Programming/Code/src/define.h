@@ -45,6 +45,8 @@
 #define REQ_DELIM       ':'
 #define REJECTED_MSG    "REJECTED"
 #define ACCEPTED_MSG    "ACCEPTED"
+#define REG_REQ_MSG     "REG_REQ"
+#define TERMINATE_MSG   "TERMINATE"
 // clang-format on
 
 // types and states

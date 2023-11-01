@@ -10,17 +10,7 @@ int initBroadcastSupplier(Supplier* supplier) {
 
     char names[MAX_TOTAL][BUF_NAME];
     int size;
-    broadcastMe(supplier);
-    char msg[BUF_MSG];
-    recv(supplier->bcast.fd, msg, strlen(msg), 0);
-    deserializer(supplier, msg, names, &size);
-
-    if (!checkUnique(supplier->name, names, size)) {
-        logError("Username not unique");
-        exit(EXIT_FAILURE);
-    }
-    
-    broadcast(supplier, serializer(supplier, REGISTERING));
+    broadcast(supplier, REG_REQ_MSG);
     logInfo("Broadcast for supplier initialized.");
 }
 
@@ -37,8 +27,8 @@ void initSupplier(Supplier* supplier, char* port) {
 }
 
 void broadcast(Supplier* supplier, char* msg) {
-    sendto(supplier->bcast.fd, msg, strlen(msg), 0, 
-           (struct sockaddr*)&supplier->bcast.addr, sizeof(supplier->bcast.addr));
+    sendto(supplier->bcast.fd, msg, strlen(msg), 0, (struct sockaddr*)&supplier->bcast.addr,
+           sizeof(supplier->bcast.addr));
 }
 
 char* serializer(Supplier* supplier, RegisteringState state) {
@@ -56,36 +46,7 @@ char* serializer(Supplier* supplier, RegisteringState state) {
     return strdup(broadMsg);
 }
 
-void broadcastMe(Supplier* supplier) {
-    broadcast(supplier, serializer(supplier, NOT_REGISTERING));
-}
-
-void deserializer(Supplier* supplier, char* msg, char names[MAX_TOTAL][BUF_NAME], int* size) {
-    char* part = strtok(msg, BCAST_OUT_DELIM);
-    int shouldBroadcast = 0;
-    while (part != NULL) {
-        char* token = strtok(part, BCAST_IN_DELIM);
-        if (token == NULL) break;
-        RegisteringState state = atoi(token);
-        token = strtok(NULL, BCAST_IN_DELIM);
-        if (token == NULL) break;
-        char* name = token;
-        strcpy(names[(*size)++], name);
-        token = strtok(NULL, BCAST_IN_DELIM);
-        if (token == NULL) break;
-        int tcpPort = atoi(token);
-        token = strtok(NULL, BCAST_OUT_DELIM);
-        if (token == NULL) break;
-        BroadcastType type = atoi(token);
-
-        shouldBroadcast |= (type == RESTAURANT && state == REGISTERING);
-        shouldBroadcast |= (state == NOT_REGISTERING);
-
-        part = strtok(NULL, BCAST_OUT_DELIM);
-    }
-    if (shouldBroadcast)
-        broadcastMe(supplier);
-}
+void broadcastMe(Supplier* supplier) { broadcast(supplier, serializer(supplier, NOT_REGISTERING)); }
 
 void cli(Supplier* supplier, FdSet* fdset) { logError("No available commands."); }
 
@@ -96,9 +57,19 @@ void UDPHandler(Supplier* supplier, FdSet* fdset) {
         logError("Error receiving broadcast.");
         return;
     }
-    char names[MAX_TOTAL][BUF_NAME];
-    int size;
-    deserializer(supplier, msgBuf, names, &size);
+
+    if (!strcmp(msgBuf, REG_REQ_MSG))
+        broadcast(supplier, serializer(supplier, REGISTERING));
+    else {
+        char* name;
+        int port;
+        deserializer(msgBuf, name, &port);
+        if (!strcmp(supplier->name, name) && supplier->tcpPort != port) {
+            int fd = connectServer(port);
+            send(fd, TERMINATE_MSG, strlen(TERMINATE_MSG), 0);
+            return;
+        }
+    }
 }
 
 void newConnectionHandler(int fd, Supplier* supplier, FdSet* fdset) {
@@ -124,7 +95,14 @@ void chatHandler(int fd, char* msgBuf, Supplier* supplier, FdSet* fdset) {
     }
 
     // name|quantity:port
+    // terminate msg
     char* name = strtok(msgBuf, REQ_IN_DELIM);
+
+    if (!strcmp(name, TERMINATE_MSG)) {
+        logError("Duplication in username");
+        exit(EXIT_FAILURE);
+    }
+
     int quantity = atoi(strtok(NULL, REQ_DELIM));
     int port = atoi(strtok(NULL, REQ_DELIM));
 
@@ -132,22 +110,7 @@ void chatHandler(int fd, char* msgBuf, Supplier* supplier, FdSet* fdset) {
     snprintf(msg, BUF_MSG, "You have a new request for %s", name);
     logMsg(msg);
 
-    char ans[BUF_MSG];
-    getInput(STDIN_FILENO, "Accept? (y/n)", ans, BUF_MSG);
-
-    int ansFd = connectServer(port);
-
-    if (!strcmp(ans, "y")) {
-        snprintf(msg, BUF_MSG, "Request for %s accepted.", name);
-        logInfo(msg);
-        send(ansFd, ACCEPTED_MSG, strlen(ACCEPTED_MSG), 0);
-    } else if (!strcmp(ans, "n")) {
-        snprintf(msg, BUF_MSG, "Request for %s rejected.", name);
-        logInfo(msg);
-        send(ansFd, REJECTED_MSG, strlen(REJECTED_MSG), 0);
-    } else {
-        logError("Invalid answer.");
-    }
+    yesNoPromptSupplier(name, port);
 }
 
 void interface(Supplier* supplier) {
