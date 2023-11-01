@@ -66,10 +66,11 @@ int connectServer(unsigned short port) {
     fd = socket(AF_INET, SOCK_STREAM, 0);
 
     server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(port); // ! FIXME
-    server_address.sin_addr.s_addr = INADDR_ANY; // STH TODO
+    server_address.sin_port = htons(port);        // ! FIXME
+    server_address.sin_addr.s_addr = INADDR_ANY;  // STH TODO
 
-    if (connect(fd, (struct sockaddr *)&server_address, sizeof(server_address)) < 0) {  // checking for errors
+    if (connect(fd, (struct sockaddr *)&server_address, sizeof(server_address)) <
+        0) {  // checking for errors
         printf("Error in connecting to server\n");
     }
 
@@ -104,23 +105,25 @@ int main(int argc, char const *argv[]) {
         if (FD_ISSET(0, &rd_set)) {
             memset(buffer, 0, 1024);
             read(0, buffer, 1024);
-            
-            char* cmd = strtok(buffer, " ");
+
+            char *cmd = strtok(buffer, " ");
             if (cmd == NULL) return 1;
 
             if (!strcmp(cmd, "connect")) {
-                char* portStr = strtok(NULL, " ");
+                char *portStr = strtok(NULL, " ");
                 int port = atoi(portStr);
                 unsigned short usPort = (unsigned short)port;
                 int newSocket = connectServer(usPort);
                 char msg[BUF_MSG];
-                sprintf(msg, "hello, I'm now connected to you. I can be found on port: %s\n", argv[1]);
+                sprintf(msg, "hello, I'm now connected to you. I can be found on port: %s\n",
+                        argv[1]);
                 write(1, msg, strlen(msg));
                 send(newSocket, msg, strlen(msg), 0);
                 if (newSocket > max_sd) max_sd = newSocket;
             } else {
                 // int fd = (max_sd > 4) ? tcp_conn : udp_conn;
-                sendto(udp_conn, buffer, strlen(buffer), 0, (struct sockaddr *)&main_addr, sizeof(main_addr));
+                sendto(udp_conn, buffer, strlen(buffer), 0, (struct sockaddr *)&main_addr,
+                       sizeof(main_addr));
             }
         }
 

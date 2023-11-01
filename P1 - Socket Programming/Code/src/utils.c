@@ -5,6 +5,7 @@ void cliPrompt() { write(STDOUT_FILENO, ANSI_WHT ">> " ANSI_RST, 12); }
 void errnoPrint() { logError(strerror(errno)); }
 
 int writeToFile(const char* filename, const char* ext, const char* txt) {
+    logInfo("Writing to file.");
     char fname[BUF_NAME + 10] = {'\0'};
     strcpy(fname, filename);
     if (ext != NULL) strcat(fname, ext);
@@ -15,6 +16,7 @@ int writeToFile(const char* filename, const char* ext, const char* txt) {
 
     if (write(fd, txt, strlen(txt)) < 0) return 1;
     close(fd);
+    logInfo("Done writing to file.");
     return 0;
 }
 
@@ -116,8 +118,4 @@ cJSON* loadJSON() {
         return;
     }
     return root;
-} 
-
-
-
-
+}

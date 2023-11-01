@@ -92,6 +92,7 @@
         "*.rmd": "markdown",
         "types.h": "c",
         "*.ipp": "c",
-        "socket": "c"
+        "socket": "c",
+        "utils.h": "c"
     }
 }

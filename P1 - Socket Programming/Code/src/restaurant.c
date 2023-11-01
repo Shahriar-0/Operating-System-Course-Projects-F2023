@@ -1,8 +1,8 @@
 #include "define.h"
-#include "logger.h"
 #include "utils.h"
 
 loadMenu(Restaurant* restaurant) {
+    logInfo("Loading menu.");
     cJSON* root = loadJSON();
     if (root == NULL) return;
 
@@ -26,9 +26,11 @@ loadMenu(Restaurant* restaurant) {
     restaurant->menuSize = menuSize;
 
     cJSON_Delete(root);
+    logInfo("Menu loaded.");
 }
 
 void printMenu(const Restaurant* restaurant) {
+    logInfo("Printing menu.");
     logLamination();
     logNormal("Menu:\n");
     for (int i = 0; i < restaurant->menuSize; i++) {
@@ -39,17 +41,28 @@ void printMenu(const Restaurant* restaurant) {
         for (int j = 0; j < food->ingredientSize; j++) {
             memset(buf, STRING_END, BUF_MSG);
             sprintf(buf, "     - %s: %d", food->ingredients[j], food->quantity[j]);
-            logNormal(buf); 
+            logNormal(buf);
         }
     }
     logLamination();
+    logInfo("Menu printed.");
+}
+
+int initBroadcastRestaurant(Restaurant* restaurant) {
+    logInfo("Initializing broadcast for restaurant.");
+    // TODO: complete this
+    logInfo("Broadcast for restaurant initialized.");
 }
 
 void initRestaurant(Restaurant* restaurant, char* port) {
+    logInfo("Initializing restaurant.");
+    initBroadcastRestaurant(restaurant);
+
     restaurant->tcpPort = atoi(port);
     initTCP(&restaurant->tcpPort);
 
     loadMenu(restaurant);
+    logInfo("Restaurant initialized.");
 }
 
 int main(int argc, char** argv) {

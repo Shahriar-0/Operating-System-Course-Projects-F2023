@@ -3,4 +3,4 @@
 
 #include "define.h"
 
-#endif // SERIALIZER_H_INCLUDE
+#endif  // SERIALIZER_H_INCLUDE
