@@ -17,18 +17,131 @@ int initBroadcastSupplier(Supplier* supplier) {
 void initSupplier(Supplier* supplier, char* port) {
     logInfo("Initializing supplier.");
     initBroadcastSupplier(supplier);
-    
+
     getInput(STDIN_FILENO, "Enter your name: ", supplier->name, BUF_NAME);
 
     supplier->tcpPort = atoi(port);
     initTCP(&supplier->tcpPort);
 
-
     logInfo("Supplier initialized.");
+}
+
+void broadcast(Supplier* supplier, char* msg) {
+    sendto(supplier->bcast.fd, msg, strlen(msg), 0, (struct sockaddr*)&supplier->bcast.addr,
+           sizeof(supplier->bcast.addr));
+}
+
+char* serializer(Supplier* supplier, RegisteringState state) {
+    char broadMsg[BUF_MSG] = {STRING_END};
+
+    // clang-format off
+    // state | name | tcpPort | type
+    snprintf(broadMsg, BUF_MSG, "%d%c%s%c%d%c%d%c", 
+             state, BCAST_IN_DELIM, 
+             supplier->name, BCAST_IN_DELIM, 
+             supplier->tcpPort, BCAST_IN_DELIM, 
+             SUPPLIER, BCAST_OUT_DELIM);
+    // clang-format on
+
+    return strdup(broadMsg);
+}
+
+void broadcastMe(Supplier* supplier) {
+    char* msg = serializer(supplier, NOT_REGISTERING);
+    broadcast(supplier, msg);
+}
+
+void deserializer(Supplier* supplier, char* msg) {
+    char* part = strtok(msg, BCAST_OUT_DELIM);
+    while (part != NULL) {
+        char* token = strtok(part, BCAST_IN_DELIM);
+        if (token == NULL) break;
+        RegisteringState state = atoi(token);
+        token = strtok(NULL, BCAST_IN_DELIM);
+        if (token == NULL) break;
+        char* name = token;
+        token = strtok(NULL, BCAST_IN_DELIM);
+        if (token == NULL) break;
+        int tcpPort = atoi(token);
+        token = strtok(NULL, BCAST_OUT_DELIM);
+        if (token == NULL) break;
+        BroadcastType type = atoi(token);
+
+        if (state == REGISTERING)
+            if (type == RESTAURANT)
+                broadcastMe(supplier);
+            else
+                broadcastMe(supplier);
+
+        part = strtok(NULL, BCAST_OUT_DELIM);
+    }
+}
+
+void cli(Supplier* supplier, FdSet* fdset) { logError("No available commands."); }
+
+void UDPHandler(Supplier* supplier, FdSet* fdset) {
+    char msgBuf[BUF_MSG] = {STRING_END};
+    int recvCount = recvfrom(supplier->bcast.fd, msgBuf, BUF_MSG, 0, NULL, NULL);
+    if (recvCount == 0) {
+        logError("Error receiving broadcast.");
+        return;
+    }
+    deserializer(supplier, msgBuf);
+}
+
+void newConnectionHandler(int fd, Supplier* supplier, FdSet* fdset) {
+    logInfo("New connection request.");
+    struct sockaddr_in addr;
+    socklen_t addrlen = sizeof(addr);
+    int newfd = accept(fd, (struct sockaddr*)&addr, &addrlen);
+    if (newfd < 0) {
+        logError("Error accepting new connection.");
+        return;
+    }
+    FD_SETTER(newfd, fdset);
+    logInfo("New connection accepted.");
+}
+
+void chatHandler(int fd, char* msgBuf, Supplier* supplier, FdSet* fdset) {
+    int recvCount = recv(fd, msgBuf, BUF_MSG, 0);
+    if (recvCount == 0) {
+        logInfo("Connection closed.");
+        close(fd);
+        FD_CLRER(fd, fdset);
+        return;
+    }
+
+    // name|quantity:port
+    char* name = strtok(msgBuf, REQ_IN_DELIM);
+    int quantity = atoi(strtok(NULL, REQ_DELIM));
+    int port = atoi(strtok(NULL, REQ_DELIM));
+
+    char msg[BUF_MSG] = {STRING_END};
+    snprintf(msg, BUF_MSG, "You have a new request for %s", name);
+    logMsg(msg);
+
+    char ans[BUF_MSG];
+    getInput(STDIN_FILENO, "Accept? (y/n)", ans, BUF_MSG);
+
+    if (!strcmp(ans, "y")) {
+        snprintf(msg, BUF_MSG, "Request for %s accepted.", name);
+        logInfo(msg);
+        send(fd, ACCEPTED_MSG, strlen(ACCEPTED_MSG), 0);
+    } else if (!strcmp(ans, "n")) {
+        snprintf(msg, BUF_MSG, "Request for %s rejected.", name);
+        logInfo(msg);
+        send(fd, REJECTED_MSG, strlen(REJECTED_MSG), 0);
+    } else {
+        logError("Invalid answer.");
+    }
 }
 
 void interface(Supplier* supplier) {
     char msgBuf[BUF_MSG] = {STRING_END};
+
+    FdSet fdset;
+    InitFdSet(&fdset);
+
     while (1) {
         cliPrompt();
         memset(msgBuf, STRING_END, BUF_MSG);
@@ -37,39 +150,18 @@ void interface(Supplier* supplier) {
 
         for (int i = 0; i <= fdset.max; ++i) {
             if (!FD_ISSET(i, &fdset.working)) continue;
-            if (i != STDIN_FILENO) {
-                write(STDOUT_FILENO, "\x1B[2K\r", 5);
-            }
-            if (i == STDIN_FILENO) {
-                cli(supplier, &fdset, &pendingServers);
-            }
-            else if (FD_ISSET(i, &pendingServers)) {
-                int accSocket = accClient(i);
-                close(i);
 
-                FD_CLR(i, &pendingServers);
-                FD_CLRER(i, &fdset);
-                FD_SETTER(accSocket, &fdset);
+            // this if is for having a clean interface when receiving messages
+            if (i != STDIN_FILENO) write(STDOUT_FILENO, CLEAR_LINE_ANSI, CLEAR_LINE_LEN);
 
-                int prodNum = getProductBySocket(&supplier->prods, i);
-                supplier->prods.ptr[prodNum].state = DISCUSS;
-                supplier->prods.ptr[prodNum].socket = accSocket;
-                sendMsgBcast(supplier, serializeBcast(supplier, prodNum));
-
-                snprintf(msgBuf, BUF_MSG, "Accepted client for product #%d: %s", prodNum + 1, supplier->prods.ptr[prodNum].name);
-                logInfo(msgBuf);
-            }
-            else {
-                int crecv = recv(i, msgBuf, BUF_MSG, 0);
-
-                if (crecv == 0) {
-                    endConnection(i, supplier, &fdset, &pendingServers);
-                    logInfo("Discussion closed by client.");
-                    continue;
-                }
-
-                handleChat(msgBuf, i, supplier);
-            }
+            if (i == STDIN_FILENO)
+                cli(supplier, &fdset);
+            else if (i == supplier->bcast.fd)
+                UDPHandler(supplier, &fdset);
+            else if (i == supplier->tcpPort)
+                newConnectionHandler(i, supplier, &fdset);
+            else
+                chatHandler(i, msgBuf, supplier, &fdset);
         }
     }
 }
