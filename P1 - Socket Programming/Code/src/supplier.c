@@ -30,22 +30,9 @@ void initSupplier(Supplier* supplier, char* port) {
 }
 
 
-char* serializer(Supplier* supplier, RegisteringState state) {
-    char broadMsg[BUF_MSG] = {STRING_END};
 
-    // clang-format off
-    // state | name | tcpPort | type
-    snprintf(broadMsg, BUF_MSG, "%d%c%s%c%d%c%d%c", 
-             state, BCAST_IN_DELIM, 
-             supplier->name, BCAST_IN_DELIM, 
-             supplier->tcpPort, BCAST_IN_DELIM, 
-             SUPPLIER, BCAST_OUT_DELIM);
-    // clang-format on
 
-    return strdup(broadMsg);
-}
-
-void broadcastMe(Supplier* supplier) { broadcast(supplier, serializer(supplier, NOT_REGISTERING)); }
+void broadcastMe(Supplier* supplier) { broadcast(supplier, serializerSupplier(supplier, NOT_REGISTERING)); }
 
 void cli(Supplier* supplier, FdSet* fdset) { logError("No available commands."); }
 

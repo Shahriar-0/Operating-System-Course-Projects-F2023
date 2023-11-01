@@ -192,3 +192,46 @@ void yesNoPromptSupplier(char* name, unsigned short port) {
         logError("Invalid answer.");
     }
 }
+
+// state | name | tcpPort | type
+char* serializerSupplier(Supplier* supplier, RegisteringState state) {
+    char broadMsg[BUF_MSG] = {STRING_END};
+
+    // clang-format off
+    snprintf(broadMsg, BUF_MSG, "%d%c%s%c%d%c%d%c", 
+             state, BCAST_IN_DELIM, 
+             supplier->name, BCAST_IN_DELIM, 
+             supplier->tcpPort, BCAST_IN_DELIM, 
+             SUPPLIER, BCAST_OUT_DELIM);
+    // clang-format on
+
+    return strdup(broadMsg);
+}
+
+char* serializerCustomer(Customer* customer, RegisteringState state) {
+    char broadMsg[BUF_MSG] = {STRING_END};
+
+    // clang-format off
+    snprintf(broadMsg, BUF_MSG, "%d%c%s%c%d%c%d%c", 
+             state, BCAST_IN_DELIM, 
+             customer->name, BCAST_IN_DELIM, 
+             customer->tcpPort, BCAST_IN_DELIM, 
+             CUSTOMER, BCAST_OUT_DELIM);
+    // clang-format on
+
+    return strdup(broadMsg);
+}
+
+char* serializerRestaurant(Restaurant* restaurant, RegisteringState state) {
+    char broadMsg[BUF_MSG] = {STRING_END};
+
+    // clang-format off
+    snprintf(broadMsg, BUF_MSG, "%d%c%s%c%d%c%d%c", 
+             state, BCAST_IN_DELIM, 
+             restaurant->name, BCAST_IN_DELIM, 
+             restaurant->tcpPort, BCAST_IN_DELIM, 
+             RESTAURANT, BCAST_OUT_DELIM);
+    // clang-format on
+
+    return strdup(broadMsg);
+}

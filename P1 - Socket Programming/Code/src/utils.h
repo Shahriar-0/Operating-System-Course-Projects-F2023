@@ -38,5 +38,7 @@ cJSON* loadJSON();
 // check username uniqueness
 int deserializer(char* msg, char** name, int* port, BroadcastType* type);
 int checkUnique(char* name, char names[MAX_TOTAL][BUF_NAME], int size);
-
+char* serializerSupplier(Supplier* supplier, RegisteringState state);
+char* serializerCustomer(Customer* customer, RegisteringState state);
+char* serializerRestaurant(Restaurant* restaurant, RegisteringState state);
 #endif  // UTILS_H_INCLUDE

@@ -183,7 +183,7 @@ void UDPHandler(Customer* customer, FdSet* fdset) {
         return;
     }
 
-    if (!strcmp(msgBuf, REG_REQ_MSG)) broadcast(customer, serializer(customer, REGISTERING));
+    if (!strcmp(msgBuf, REG_REQ_MSG)) broadcast(customer, serializerCustomer(customer, REGISTERING));
 
     char* cmd = strtok(msgBuf, REQ_DELIM);
     if (cmd != NULL) {
@@ -218,7 +218,7 @@ void chatHandler(int fd, char* msgBuf, Customer* customer, FdSet* fdset) {
     if (recvCount == 0) {
         logInfo("Connection closed.");
         close(fd);
-        FD_CLEAR(fd, fdset);
+        FD_CLRER(fd, fdset);
         return;
     }
 
@@ -227,7 +227,7 @@ void chatHandler(int fd, char* msgBuf, Customer* customer, FdSet* fdset) {
         if (!strcmp(cmd, TERMINATE_MSG)) {
             logInfo("Duplication in username.");
             close(fd);
-            FD_CLEAR(fd, fdset);
+            FD_CLRER(fd, fdset);
         }
     } else {
         logNormal(msgBuf);
