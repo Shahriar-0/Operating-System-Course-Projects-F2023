@@ -112,6 +112,18 @@ void printHelp() {
     logLamination();
 }
 
+void printRestaurants(Customer* customer) {
+    logLamination();
+    logNormal("Restaurants:\n");
+    for (int i = 0; i < customer->restaurantSize; i++) {
+        char msg[BUF_MSG] = {STRING_END};
+        sprintf(msg, "%d. %s - %d\n", i + 1, customer->restaurants[i].name,
+                customer->restaurants[i].port);
+        logNormal(msg);
+    }
+    logLamination();
+}
+
 void cli(Customer* customer, FdSet* fdset) {
     char msg[BUF_MSG] = {STRING_END};
 
@@ -123,6 +135,8 @@ void cli(Customer* customer, FdSet* fdset) {
         printMenuSummary(customer);
     else if (!strcmp(msg, "order"))
         orderFood(customer, msg);
+    else if (!strcmp(msg, "restaurants")) 
+        printRestaurants(customer);
     else if (!strcmp(msg, "exit")) {
         logInfo("Exiting.");
         exit(EXIT_SUCCESS);
