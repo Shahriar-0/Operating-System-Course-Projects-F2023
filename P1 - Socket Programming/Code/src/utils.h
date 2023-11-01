@@ -26,7 +26,7 @@ int strToPort(const char* str, unsigned short* res);
 unsigned short strToPortErr(const char* str);
 
 // FdSet
-void InitFdSet(FdSet* fdset);
+void InitFdSet(FdSet* fdset, int UDPfd);
 void FD_SETTER(int socket, FdSet* fdset);
 void FD_CLRER(int socket, FdSet* fdset);
 

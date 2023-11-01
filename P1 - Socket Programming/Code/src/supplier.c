@@ -140,7 +140,7 @@ void interface(Supplier* supplier) {
     char msgBuf[BUF_MSG] = {STRING_END};
 
     FdSet fdset;
-    InitFdSet(&fdset);
+    InitFdSet(&fdset, supplier->bcast.fd);
 
     while (1) {
         cliPrompt();
