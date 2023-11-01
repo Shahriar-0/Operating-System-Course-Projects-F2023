@@ -74,6 +74,12 @@ unsigned short strToPortErr(const char* str) {
 }
 
 
+int checkUnique(char* name, char names[MAX_TOTAL][BUF_NAME], int size) {
+    for (int i = 0; i < size; i++) 
+        if (!strcmp(name, names[i])) return 0;
+    return 1;
+}
+
 ////////////////////// FdSet //////////////////////
 void FD_SETTER(int socket, FdSet* fdset) {
     FD_SET(socket, &fdset->master);

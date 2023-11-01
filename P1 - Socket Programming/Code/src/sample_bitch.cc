@@ -66,11 +66,10 @@ int connectServer(unsigned short port) {
     fd = socket(AF_INET, SOCK_STREAM, 0);
 
     server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(port);        // ! FIXME
-    server_address.sin_addr.s_addr = INADDR_ANY;  // STH TODO
+    server_address.sin_port = htons(port);        
+    server_address.sin_addr.s_addr = INADDR_ANY;  
 
-    if (connect(fd, (struct sockaddr *)&server_address, sizeof(server_address)) <
-        0) {  // checking for errors
+    if (connect(fd, (struct sockaddr *)&server_address, sizeof(server_address)) <0) {  // checking for errors
         printf("Error in connecting to server\n");
     }
 

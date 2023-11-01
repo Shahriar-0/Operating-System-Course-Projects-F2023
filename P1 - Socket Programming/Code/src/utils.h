@@ -33,5 +33,7 @@ void FD_CLRER(int socket, FdSet* fdset);
 // JSON
 cJSON* loadJSON();
 
+// check username uniqueness
+int checkUnique(char* name, char names[MAX_TOTAL][BUF_NAME], int size);
 
 #endif  // UTILS_H_INCLUDE

@@ -31,27 +31,32 @@ int initBroadcast(struct sockaddr_in* addrOut) {
     return socketId;
 }
 
-int initTCP(unsigned short port) {
-    logInfo("Initializing TCP.");
-    int serverFd;
-    serverFd = socket(AF_INET, SOCK_STREAM, 0);
+int setupSocket(unsigned short port, struct sockaddr_in* addr) {
+    int serverFd = socket(AF_INET, SOCK_STREAM, 0);
     if (serverFd < 0) return serverFd;
 
     int opt = 1;
     setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
+    addr->sin_family = AF_INET;
+    addr->sin_addr.s_addr = INADDR_ANY;
+    addr->sin_port = htons(port);
+    memset(addr->sin_zero, STRING_END, sizeof(addr->sin_zero));
+
+    return serverFd;
+}
+
+int initTCP(unsigned short port) {
+    logInfo("Initializing TCP.");
+
+    int serverFd;
     struct sockaddr_in addr;
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = INADDR_ANY;
-    addr.sin_port = htons(port);
-    memset(addr.sin_zero, STRING_END, sizeof(addr.sin_zero));
-
+    setupSocket(port, &addr);
+  
     bind(serverFd, (struct sockaddr*)&addr, sizeof(addr));
-
     listen(serverFd, MAX_LISTEN);
 
     logInfo("TCP initialized.");
-
     return serverFd;
 }
 
@@ -65,7 +70,7 @@ int accClient(int socketId) {
     return clientSocket;
 }
 
-int connectServer(unsigned short port, int* outServerSocket) {
+int connectServer(unsigned short port) {
     logInfo("Connecting to server.");
     int serverId = socket(PF_INET, SOCK_STREAM, 0);
     if (serverId < 0) return serverId;
@@ -76,11 +81,10 @@ int connectServer(unsigned short port, int* outServerSocket) {
     addr.sin_addr.s_addr = inet_addr(BCAST_IP);
     memset(addr.sin_zero, STRING_END, sizeof(addr.sin_zero));
 
-    *outServerSocket = serverId;
-
     int res = connect(serverId, (struct sockaddr*)&addr, sizeof(addr));
     if (res < 0) return res;
+
     logInfo("Connected to server.");
-    return res;
+    return serverId;
 }
 

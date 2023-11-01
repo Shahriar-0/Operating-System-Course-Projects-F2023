@@ -32,6 +32,7 @@
 #define MAX_INGREDIENT  20
 #define MAX_SUPPLIER    20
 #define MAX_RESTAURANT  20
+#define MAX_TOTAL       20
 #define MAX_FOOD        20
 #define MAX_REQUEST     20
 #define MAX_LISTEN      4
