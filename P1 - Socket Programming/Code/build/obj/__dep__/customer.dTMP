@@ -1,0 +1,7 @@
+build/obj/customer.o: src/customer.c src/define.h src/network.h \
+ src/utils.h src/ansi_colors.h src/logger.h
+src/define.h:
+src/network.h:
+src/utils.h:
+src/ansi_colors.h:
+src/logger.h:

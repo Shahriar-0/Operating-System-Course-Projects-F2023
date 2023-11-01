@@ -4,6 +4,8 @@
 #include "ansi_colors.h"
 #include "define.h"
 
+void logLamination();
+
 void logNormal(const char* msg);
 void logInput(const char* msg);
 void logMsg(const char* msg);

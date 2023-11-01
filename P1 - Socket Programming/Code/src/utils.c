@@ -68,3 +68,95 @@ unsigned short strToPortErr(const char* str) {
     }
     return port;
 }
+
+char* read_file(const char* filename) {
+    int fd = open(filename, O_RDONLY);
+    if (fd == -1) {
+        logError("error in open file");
+        return NULL;
+    }
+
+    struct stat st;
+    if (fstat(fd, &st) == -1) {
+        logError("Cannot get file size");
+        close(fd);
+        return NULL;
+    }
+
+    char* buffer = malloc(st.st_size + 1);
+    if (buffer == NULL) {
+        logError("Cannot allocate buffer");
+        close(fd);
+        return NULL;
+    }
+
+    ssize_t bytes_read = read(fd, buffer, st.st_size);
+    if (bytes_read != st.st_size) {
+        logError("Cannot read file");
+        free(buffer);
+        close(fd);
+        return NULL;
+    }
+
+    buffer[st.st_size] = '\0';
+
+    close(fd);
+    return buffer;
+}
+
+cJSON* loadJSON() {
+    char* jsonAddress = RECIPE_ADDRESS;
+    char* json = read_file(jsonAddress);
+    cJSON* root = cJSON_Parse(json);
+    if (root == NULL) {
+        char* error_ptr = cJSON_GetErrorPtr();
+        char errmsg[BUF_MSG] = {'\0'};
+        sprintf(errmsg, "Error before: %s\n", error_ptr);
+        logError(errmsg);
+        return;
+    }
+    return root;
+} 
+
+void loadFoodNames(Customer* customer) {
+    cJSON* root = loadJSON();
+    if (root == NULL) return;
+
+    int foodSize = cJSON_GetArraySize(root);
+    customer->foodSize = foodSize;
+
+    cJSON* item = NULL;
+    int index = 0;
+    cJSON_ArrayForEach(item, root) {
+        customer->foods[index] = strdup(item->string);
+        index++;
+    }
+
+    cJSON_Delete(root);
+}
+
+loadMenu(Restaurant* restaurant) {
+    cJSON* root = loadJSON();
+    if (root == NULL) return;
+
+    int menuSize = 0;
+    cJSON* food_item = NULL;
+    cJSON_ArrayForEach(food_item, root) {
+        Food* food = &restaurant->menu[menuSize];
+        strncpy(food->name, food_item->string, BUF_NAME);
+
+        int ingredientSize = 0;
+        cJSON* ingredient_item = NULL;
+        cJSON_ArrayForEach(ingredient_item, food_item) {
+            food->ingredients[ingredientSize] = strdup(ingredient_item->string);
+            food->quantity[ingredientSize] = ingredient_item->valueint;
+            ingredientSize++;
+        }
+        food->ingredientSize = ingredientSize;
+
+        menuSize++;
+    }
+    restaurant->menuSize = menuSize;
+
+    cJSON_Delete(root);
+}

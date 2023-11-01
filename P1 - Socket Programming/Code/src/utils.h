@@ -3,6 +3,7 @@
 
 #include "define.h"
 #include "ansi_colors.h"
+#include "logger.h"
 
 // Print the prompt string.
 void cliPrompt();
@@ -23,5 +24,10 @@ void getInput(int fd, const char* prompt, char* dst, size_t dstLen);
 int strToInt(const char* str, int* res);
 int strToPort(const char* str, unsigned short* res);
 unsigned short strToPortErr(const char* str);
+
+// JSON
+void loadFoodNames(Customer* customer);
+void loadMenu(Restaurant* restaurant);
+cJSON* loadJSON()
 
 #endif // UTILS_H_INCLUDE

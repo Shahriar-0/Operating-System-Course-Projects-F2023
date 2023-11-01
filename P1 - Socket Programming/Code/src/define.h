@@ -3,6 +3,7 @@
 
 // includes
 #include <arpa/inet.h>
+#include <cjson/cJSON.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -18,6 +19,9 @@
 
 // Constants
 // clang-format off
+#define _XOPEN_SOURCE  700
+#define LAMINATION     "----------------------------------------"
+#define LAMLEN         40
 #define BUF_NAME       32
 #define BUF_PNAME      64
 #define BUF_CLI        128
@@ -32,7 +36,6 @@
 #define MAX_REQUEST    20
 #define MAX_LISTEN     4
 #define UDP_PORT       8080
-#define UDP_IP         "255.255.255.255"
 #define LOCAL_HOST     "127.0.0.1"
 #define STRING_END     '\0'
 #define REG_MSG        "$REG$"
@@ -97,10 +100,12 @@ typedef struct {
 
 typedef struct {
     char name[BUF_NAME];
-    Food foods[MAX_FOOD];
+    char* foods[MAX_FOOD];
+    int foodSize;
     BroadcastData restaurants[MAX_RESTAURANT];
     int restaurantSize;
     BroadcastInfo bcast;
+    unsigned short tcpPort;
 } Customer;
 
 #endif  // DEFINE_H_INCLUDE

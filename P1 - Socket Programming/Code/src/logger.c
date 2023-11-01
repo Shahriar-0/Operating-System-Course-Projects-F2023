@@ -1,5 +1,10 @@
 #include "logger.h"
 
+void logLamination() {
+    write(STDOUT_FILENO, LAMINATION, LAMLEN);
+    write(STDOUT_FILENO, "\n", 1);
+}
+
 void logNormal(const char* msg) {
     write(STDOUT_FILENO, msg, strlen(msg));
     write(STDOUT_FILENO, "\n", 1);
