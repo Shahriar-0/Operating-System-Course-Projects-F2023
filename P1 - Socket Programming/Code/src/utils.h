@@ -25,6 +25,11 @@ int strToInt(const char* str, int* res);
 int strToPort(const char* str, unsigned short* res);
 unsigned short strToPortErr(const char* str);
 
+// FdSet
+void fdSetInit(FdSet* fdset);
+void FD_SETTER(int socket, FdSet* fdset);
+void FD_CLRER(int socket, FdSet* fdset);
+
 // JSON
 cJSON* loadJSON();
 

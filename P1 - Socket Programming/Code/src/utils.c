@@ -106,6 +106,33 @@ char* read_file(const char* filename) {
     return buffer;
 }
 
+void FD_SETTER(int socket, FdSet* fdset) {
+    FD_SET(socket, &fdset->master);
+
+    if (socket > fdset->max) fdset->max = socket;
+
+    logInfo("Socket added to fdset.");
+}
+
+void FD_CLRER(int socket, FdSet* fdset) {
+    FD_CLR(socket, &fdset->master);
+
+    if (socket == fdset->max) fdset->max--;
+
+    logInfo("Socket removed from fdset.");
+}
+
+
+void FdSetInit(FdSet* fdset, int UDPfd) {
+    logInfo("Initializing fdset.");
+    fdset->max = 0;
+    FD_ZERO(&fdset->master);
+    FD_ZERO(&fdset->working);
+    FD_SETTER(STDIN_FILENO, fdset);
+    FD_SETTER(UDPfd, fdset);
+    logInfo("Fdset initialized.");
+}
+
 cJSON* loadJSON() {
     char* jsonAddress = RECIPE_ADDRESS;
     char* json = read_file(jsonAddress);
