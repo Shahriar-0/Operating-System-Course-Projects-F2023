@@ -4,7 +4,7 @@ struct sockaddr_in initBroadcastSockAddr() {
     struct sockaddr_in bcAddress;
     bcAddress.sin_family = AF_INET;
     bcAddress.sin_port = htons(UDP_PORT);
-    bcAddress.sin_addr.s_addr = inet_addr(UDP_IP);
+    bcAddress.sin_addr.s_addr = inet_addr(BCAST_IP);
     memset(bcAddress.sin_zero, STRING_END, sizeof(bcAddress.sin_zero));
     return bcAddress;
 }
@@ -26,7 +26,7 @@ int initBroadcast(struct sockaddr_in* addrOut) {
     return socketId;
 }
 
-int initServer(unsigned short port) {
+int initTCP(unsigned short port) {
     int serverFd;
     serverFd = socket(AF_INET, SOCK_STREAM, 0);
     if (serverFd < 0) return serverFd;
@@ -60,7 +60,7 @@ int connectServer(unsigned short port, int* outServerSocket) {
     struct sockaddr_in addr;
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
-    addr.sin_addr.s_addr = inet_addr(UDP_IP);
+    addr.sin_addr.s_addr = inet_addr(BCAST_IP);
     memset(addr.sin_zero, STRING_END, sizeof(addr.sin_zero));
 
     *outServerSocket = serverId;

@@ -8,7 +8,7 @@
 
 struct sockaddr_in initBroadcastSockAddr(); 
 int initBroadcast(struct sockaddr_in* addrOut); 
-int initServer(unsigned short port);
+int initTCP(unsigned short port);
 int accClient(int socketId); 
 int connectServer(unsigned short port, int* outServerSocket); 
 void FD_SETTER(int socket, FdSet* fdset); 
