@@ -28,6 +28,6 @@ unsigned short strToPortErr(const char* str);
 // JSON
 void loadFoodNames(Customer* customer);
 void loadMenu(Restaurant* restaurant);
-cJSON* loadJSON()
+cJSON* loadJSON();
 
 #endif // UTILS_H_INCLUDE
