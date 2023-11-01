@@ -63,6 +63,7 @@ void initRestaurant(Restaurant* restaurant, char* port) {
     initTCP(&restaurant->tcpPort);
 
     loadMenu(restaurant);
+    restaurant->state = OPEN;
     logInfo("Restaurant initialized.");
 }
 
