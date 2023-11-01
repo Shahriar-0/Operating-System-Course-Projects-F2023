@@ -213,6 +213,27 @@ void newConnectionHandler(int fd, Supplier* supplier, FdSet* fdset) {
     logInfo("New connection accepted.");
 }
 
+void chatHandler(int fd, char* msgBuf, Customer* customer, FdSet* fdset) {
+    int recvCount = recv(fd, msgBuf, BUF_MSG, 0);
+    if (recvCount == 0) {
+        logInfo("Connection closed.");
+        close(fd);
+        FD_CLEAR(fd, fdset);
+        return;
+    }
+
+    char* cmd = strtok(msgBuf, REQ_DELIM);
+    if (cmd != NULL) {
+        if (!strcmp(cmd, TERMINATE_MSG)) {
+            logInfo("Duplication in username.");
+            close(fd);
+            FD_CLEAR(fd, fdset);
+        }
+    } else {
+        logNormal(msgBuf);
+    }
+}
+
 void interface(Customer* customer) {
     char msgBuf[BUF_MSG] = {STRING_END};
 
