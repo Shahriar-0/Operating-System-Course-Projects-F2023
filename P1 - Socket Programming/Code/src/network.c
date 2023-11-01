@@ -84,18 +84,3 @@ int connectServer(unsigned short port, int* outServerSocket) {
     return res;
 }
 
-void FD_SETTER(int socket, FdSet* fdset) {
-    FD_SET(socket, &fdset->master);
-
-    if (socket > fdset->max) fdset->max = socket;
-
-    logInfo("Socket added to fdset.");
-}
-
-void FD_CLRER(int socket, FdSet* fdset) {
-    FD_CLR(socket, &fdset->master);
-
-    if (socket == fdset->max) fdset->max--;
-
-    logInfo("Socket removed from fdset.");
-}
