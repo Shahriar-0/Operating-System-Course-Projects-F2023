@@ -1,8 +1,9 @@
-PATH_SRC   := src
-PATH_BUILD := build
-PATH_BIN   := $(PATH_BUILD)/bin
-PATH_OBJ   := $(PATH_BUILD)/obj
-PATH_DEP   := $(PATH_OBJ)/__dep__
+PATH_SRC   	   := src
+PATH_BUILD 	   := build
+PATH_BIN   	   := $(PATH_BUILD)/bin
+PATH_OBJ   	   := $(PATH_BUILD)/obj
+PATH_DEP   	   := $(PATH_OBJ)/__dep__
+OPTIONAL_FLAGS := -lcjson
 
 include common_vars.mk
   
@@ -27,13 +28,13 @@ FILES_OBJ = $(patsubst %, $(PATH_OBJ)/%.o, $(basename $(FILES_NOMAIN)))
 all: $(PATH_BIN)/$(OUT_EXE_CUSTOMER) $(PATH_BIN)/$(OUT_EXE_RESTAURANT)
 
 $(PATH_BIN)/$(OUT_EXE_CUSTOMER): $(PATH_OBJ)/customer.o $(FILES_OBJ)
-	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) $(OPTIONAL_FLAGS) -o $@
 
 $(PATH_BIN)/$(OUT_EXE_RESTAURANT): $(PATH_OBJ)/restaurant.o $(FILES_OBJ)
-	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) $(OPTIONAL_FLAGS) -o $@
 
 $(PATH_BIN)/$(OUT_EXE_SUPPLIER): $(PATH_OBJ)/supplier.o $(FILES_OBJ)
-	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) $(OPTIONAL_FLAGS) -o $@
 
 
 DEPFLAGS    = -MT $@ -MMD -MP -MF $(PATH_DEP)/$*.dTMP
