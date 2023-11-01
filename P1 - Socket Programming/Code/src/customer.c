@@ -23,13 +23,30 @@ int initBroadcastCustomer(Customer* customer) {
     // TODO: check for uniqueness among customers
 }
 
+void loadFoodNames(Customer* customer) {
+    cJSON* root = loadJSON();
+    if (root == NULL) return;
+
+    int foodSize = cJSON_GetArraySize(root);
+    customer->foodSize = foodSize;
+
+    cJSON* item = NULL;
+    int index = 0;
+    cJSON_ArrayForEach(item, root) {
+        customer->foods[index] = strdup(item->string);
+        index++;
+    }
+
+    cJSON_Delete(root);
+}
+
 void printMenuSummary(const Customer* customer) {
     logLamination();
     logNormal("Menu:\n");
     char Food[BUF_MSG] = {'\0'};
     for (int i = 0; i < customer->foodSize; i++) {
         memset(Food, STRING_END, BUF_MSG);
-        sprintf(Food, "%d. %s\n", i + 1, customer->foods[i]);
+        sprintf(Food, "%d. %s", i + 1, customer->foods[i]);
         logNormal(Food);
     }
     logLamination();
@@ -42,7 +59,6 @@ void initCustomer(Customer* customer, char* port) {
     initTCP(&customer->tcpPort);
 
     loadFoodNames(customer);
-    printMenuSummary(customer); // * for testing
 }
 
 int main(int argc, char** argv) {
