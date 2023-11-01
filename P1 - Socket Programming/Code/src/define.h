@@ -69,8 +69,8 @@ typedef struct {
 
 typedef struct {
     char name[BUF_PNAME];
-    BroadcastInfo bcast;
     unsigned short tcpPort;
+    BroadcastInfo bcast;
 } Supplier;
 
 typedef enum { OPEN = 0, CLOSED = 1 } RestaurantState;
@@ -83,29 +83,29 @@ typedef struct {
 
 typedef struct {
     char name[BUF_NAME];
+    unsigned short tcpPort;
+    RestaurantState state;
+    BroadcastInfo bcast;
     BroadcastData suppliers[MAX_SUPPLIER];
     int supplierSize;
     Food menu[MAX_FOOD];
     int menuSize;
     Ingredient ingredients[MAX_INGREDIENT];
     int ingredientSize;
-    RestaurantState state;
     FoodRequest pendingRequest[MAX_REQUEST];
     int pendingRequestSize;
     FoodRequest handledRequests[MAX_REQUEST];
     int handledRequestsSize;
-    unsigned short tcpPort;
-    BroadcastInfo bcast;
 } Restaurant;
 
 typedef struct {
     char name[BUF_NAME];
+    unsigned short tcpPort;
+    BroadcastInfo bcast;
     char* foods[MAX_FOOD];
     int foodSize;
     BroadcastData restaurants[MAX_RESTAURANT];
     int restaurantSize;
-    BroadcastInfo bcast;
-    unsigned short tcpPort;
 } Customer;
 
 #endif  // DEFINE_H_INCLUDE

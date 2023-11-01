@@ -65,7 +65,13 @@ void initCustomer(Customer* customer, char* port) {
 
     loadFoodNames(customer);
 
+    getInput(STDIN_FILENO, "Enter your name: ", customer->name, BUF_NAME);
+
     logInfo("Customer initialized.");
+}
+
+void interface(Customer* customer) {
+
 }
 
 int main(int argc, char** argv) {
@@ -77,6 +83,8 @@ int main(int argc, char** argv) {
     Customer customer;
     initCustomer(&customer, argv[1]);
 
-    // struct sigaction sigact = {.sa_handler = handleTimeout, .sa_flags = SA_RESTART};
-    // sigaction(SIGALRM, &sigact, NULL);
+    struct sigaction sigact = {.sa_handler = handleTimeout, .sa_flags = SA_RESTART};
+    sigaction(SIGALRM, &sigact, NULL);
+
+    interface(&customer);
 }

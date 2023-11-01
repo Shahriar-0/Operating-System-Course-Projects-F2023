@@ -1,4 +1,5 @@
 #include "define.h"
+#include "network.h"
 #include "utils.h"
 
 loadMenu(Restaurant* restaurant) {
