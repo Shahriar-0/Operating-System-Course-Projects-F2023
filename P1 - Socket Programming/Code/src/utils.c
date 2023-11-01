@@ -155,19 +155,21 @@ cJSON* loadJSON() {
     return root;
 }
 
-void deserializer(char* msg, char* name, int* port) {
+int deserializer(char* msg, char** name, int* port, BroadcastType* type) {
     char* token = strtok(msg, BCAST_IN_DELIM);
     if (token == NULL) return;
     RegisteringState state = atoi(token);
     token = strtok(NULL, BCAST_IN_DELIM);
     if (token == NULL) return;
-    name = token;
+    *name = token;
     token = strtok(NULL, BCAST_IN_DELIM);
     if (token == NULL) return;
     port = atoi(token);
     token = strtok(NULL, BCAST_OUT_DELIM);
     if (token == NULL) return;
-    BroadcastType type = atoi(token);
+    *type = atoi(token);
+
+    return state == REGISTERING;
 }
 
 void yesNoPromptSupplier(char* name, unsigned short port) {

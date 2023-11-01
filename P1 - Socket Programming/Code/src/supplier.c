@@ -2,14 +2,17 @@
 #include "network.h"
 #include "utils.h"
 
+void broadcast(Supplier* supplier, char* msg) {
+    sendto(supplier->bcast.fd, msg, strlen(msg), 0, 
+           (struct sockaddr*)&supplier->bcast.addr, sizeof(supplier->bcast.addr));
+}
+
 int initBroadcastSupplier(Supplier* supplier) {
     logInfo("Initializing broadcast for supplier.");
     int bcfd = initBroadcast(&supplier->bcast.addr);
     if (bcfd < 0) return bcfd;
     supplier->bcast.fd = bcfd;
 
-    char names[MAX_TOTAL][BUF_NAME];
-    int size;
     broadcast(supplier, REG_REQ_MSG);
     logInfo("Broadcast for supplier initialized.");
 }
@@ -26,10 +29,6 @@ void initSupplier(Supplier* supplier, char* port) {
     logInfo("Supplier initialized.");
 }
 
-void broadcast(Supplier* supplier, char* msg) {
-    sendto(supplier->bcast.fd, msg, strlen(msg), 0, (struct sockaddr*)&supplier->bcast.addr,
-           sizeof(supplier->bcast.addr));
-}
 
 char* serializer(Supplier* supplier, RegisteringState state) {
     char broadMsg[BUF_MSG] = {STRING_END};
@@ -63,7 +62,8 @@ void UDPHandler(Supplier* supplier, FdSet* fdset) {
     else {
         char* name;
         int port;
-        deserializer(msgBuf, name, &port);
+        BroadcastType type;
+        deserializer(msgBuf, &name, &port, &type);
         if (!strcmp(supplier->name, name) && supplier->tcpPort != port) {
             int fd = connectServer(port);
             send(fd, TERMINATE_MSG, strlen(TERMINATE_MSG), 0);
