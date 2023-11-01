@@ -25,6 +25,11 @@
 #define ANSI_BKG_CYN "\x1B[46m"
 #define ANSI_BKG_WHT "\x1B[47m"
 
+#define CLEAR_LINE_ANSI   "\x1B[2K\r"
+#define CLEAR_LINE_LEN    5
+#define CLEAR_SCREEN_ANSI "\x1B[2J\x1B[H"
+#define CLEAR_SCREEN_LEN  7
+
 #define ANSI_RST "\x1B[0m"
 #define ANSI_LEN 9
 
