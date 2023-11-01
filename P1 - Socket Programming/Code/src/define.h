@@ -19,27 +19,36 @@
 
 // Constants
 // clang-format off
-#define _XOPEN_SOURCE  700
-#define LAMINATION     "----------------------------------------"
-#define LAMLEN         40
-#define BUF_NAME       32
-#define BUF_PNAME      64
-#define BUF_CLI        128
-#define BUF_MSG        512
-#define BCAST_IP       "255.255.255.255"
-#define TIMEOUT        90
-#define RECIPE_ADDRESS "../../../Assets/recipes.json"
-#define MAX_INGREDIENT 20
-#define MAX_SUPPLIER   20
-#define MAX_RESTAURANT 20
-#define MAX_FOOD       20
-#define MAX_REQUEST    20
-#define MAX_LISTEN     4
-#define UDP_PORT       8080
-#define LOCAL_HOST     "127.0.0.1"
-#define STRING_END     '\0'
-#define REG_MSG        "$REG$"
+#define _XOPEN_SOURCE   700
+#define LAMINATION      "----------------------------------------"
+#define LAMLEN          40
+#define BUF_NAME        32
+#define BUF_PNAME       64
+#define BUF_CLI         128
+#define BUF_MSG         512
+#define BCAST_IP        "255.255.255.255"
+#define TIMEOUT         90
+#define RECIPE_ADDRESS  "../../../Assets/recipes.json"
+#define MAX_INGREDIENT  20
+#define MAX_SUPPLIER    20
+#define MAX_RESTAURANT  20
+#define MAX_FOOD        20
+#define MAX_REQUEST     20
+#define MAX_LISTEN      4
+#define UDP_PORT        8080
+#define LOCAL_HOST      "127.0.0.1"
+#define STRING_END      '\0'
+#define BCAST_IN_DELIM  '|'
+#define BCAST_OUT_DELIM '-'
+#define REQ_IN_DELIM    '|'
+#define REQ_DELIM       ':'
+#define REJECTED_MSG    "REJECTED"
+#define ACCEPTED_MSG    "ACCEPTED"
 // clang-format on
+
+// types and states
+typedef enum { REGISTERING, NOT_REGISTERING } RegisteringState;
+typedef enum { CUSTOMER, RESTAURANT, SUPPLIER } BroadcastType;
 
 // Structs
 typedef char* Ingredient;
@@ -68,19 +77,11 @@ typedef struct {
 } FdSet;
 
 typedef struct {
-    char name[BUF_PNAME];
-    unsigned short tcpPort;
-    BroadcastInfo bcast;
-} Supplier;
-
-typedef enum { OPEN = 0, CLOSED = 1 } RestaurantState;
-
-typedef struct {
-    char customerName[BUF_NAME];
-    int customerPort;
     char foodName[BUF_NAME];
+    int customerPort;
 } FoodRequest;
 
+typedef enum { OPEN, CLOSED } RestaurantState;
 typedef struct {
     char name[BUF_NAME];
     unsigned short tcpPort;
@@ -108,4 +109,9 @@ typedef struct {
     int restaurantSize;
 } Customer;
 
+typedef struct {
+    char name[BUF_PNAME];
+    unsigned short tcpPort;
+    BroadcastInfo bcast;
+} Supplier;
 #endif  // DEFINE_H_INCLUDE
