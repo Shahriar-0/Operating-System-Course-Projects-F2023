@@ -2,12 +2,28 @@
 #include "network.h"
 #include "utils.h"
 
+int chatSocket = -1;
+int timedOut = 0;
+
 char* RestaurantLogName(Restaurant* restaurant) {
     char* name[BUF_NAME];
     EXT type = (restaurant->state == OPEN) ? RESTAURANT : RESTAURANT_CLOSE;
     sprintf(name, "%s%s%d%s%d", restaurant->name, NAME_DELIM, restaurant->tcpPort, NAME_DELIM,
             type);
     return strdup(name);
+}
+
+void endConnection(FdSet* fdset, Restaurant* restaurant) {
+    logWarning("Timeout (90s): Disconnected from discussion.", RestaurantLogName(restaurant));
+    alarm(0);
+    FD_CLRER(chatSocket, fdset);
+    close(chatSocket);
+    chatSocket = -1;
+}
+
+void handleTimeout(int sig) {
+    timedOut = 1;
+    close(chatSocket);
 }
 
 void exiting(Restaurant* restaurant) { exitall(RestaurantLogName(restaurant)); }
@@ -288,6 +304,7 @@ void orderIngredient(Restaurant* restaurant) {
     // port:ingredient:quantity
     char msg[BUF_MSG] = {STRING_END};
     sprintf(msg, "%d%s%s%s%d", restaurant->tcpPort, REQ_DELIM, ingredientName, REQ_DELIM, quantity);
+    alarm(5);
     send(serverFd, msg, strlen(msg), 0);
     logInfo("Ingredient request sent.", RestaurantLogName(restaurant));
 }
@@ -355,11 +372,13 @@ void chatHandler(int fd, Restaurant* restaurant, FdSet* fdset) {
     char* type = strtok(msgBuf, REQ_IN_DELIM);
     
     if (!strcmp(type, ACCEPTED_MSG)) {
+        alarm(0);
         logMsg("Ingredient request accepted.", RestaurantLogName(restaurant));
         char* name = strtok(NULL, REQ_DELIM);
         int quantity = atoi(strtok(NULL, REQ_DELIM));
         addIngredient(restaurant, name, quantity);
     } else if (!strcmp(type, REJECTED_MSG)) {
+        alarm(0);
         logMsg("Ingredient request rejected.", RestaurantLogName(restaurant));
     }
     // else if (!strcmp(type, REQUEST_MSG)) {
@@ -398,6 +417,11 @@ void interface(Restaurant* restaurant) {
         fdset.working = fdset.master;
         select(fdset.max + 1, &fdset.working, NULL, NULL, NULL);
 
+        if (timedOut) {
+            timedOut = 0;
+            endConnection(&fdset, restaurant);
+        }
+
         for (int i = 0; i <= fdset.max; ++i) {
             if (!FD_ISSET(i, &fdset.working)) continue;
 
@@ -426,6 +450,9 @@ int main(int argc, char** argv) {
     Restaurant restaurant;
     restaurant.tcpPort = atoi(argv[1]);
     initRestaurant(&restaurant, argv[1]);
+
+    struct sigaction sigact = {.sa_handler = handleTimeout, .sa_flags = SA_RESTART};
+    sigaction(SIGALRM, &sigact, NULL);
 
     interface(&restaurant);
 }

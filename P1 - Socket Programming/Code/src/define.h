@@ -40,6 +40,7 @@
 #define MAX_REQUEST     20
 #define MAX_LISTEN      4
 #define UDP_PORT        8080
+#define TIME_OUT        90
 #define LOCAL_HOST      "127.0.0.1"
 #define STRING_END      '\0'
 #define BCAST_IN_DELIM  "|"
