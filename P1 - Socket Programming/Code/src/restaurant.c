@@ -55,20 +55,25 @@ void broadcast(Restaurant* restaurant, char* msg) {
 }
 
 int initBroadcastRestaurant(Restaurant* restaurant) {
+    logInfo("Initializing broadcast for restaurant.", restaurant->name);
     int bcfd = initBroadcast(&restaurant->bcast.addr);
     if (bcfd < 0) return bcfd;
     restaurant->bcast.fd = bcfd;
 
     broadcast(restaurant, REG_REQ_MSG);
+    logInfo("Broadcast for restaurant initialized.", restaurant->name);
 }
 
 void initRestaurant(Restaurant* restaurant, char* port) {
+    getInput(STDIN_FILENO, "Enter restaurant name: ", restaurant->name, BUF_NAME);
+    
+    logInfo("Initializing restaurant.", restaurant->name);
+    
     initBroadcastRestaurant(restaurant);
 
     restaurant->tcpPort = atoi(port);
     initTCP(&restaurant->tcpPort);
 
-    getInput(STDIN_FILENO, "Enter restaurant name: ", restaurant->name, BUF_NAME);
 
     loadMenu(restaurant);
     restaurant->state = OPEN;

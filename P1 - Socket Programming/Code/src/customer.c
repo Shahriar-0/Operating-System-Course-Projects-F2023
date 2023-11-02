@@ -18,11 +18,13 @@ void broadcast(Customer* customer, char* msg) {
 }
 
 int initBroadcastCustomer(Customer* customer) {
+    logInfo("Initializing broadcast for customer.", customer->name);
     int bcfd = initBroadcast(&customer->bcast.addr);
     if (bcfd < 0) return bcfd;
     customer->bcast.fd = bcfd;
 
     broadcast(customer, REG_REQ_MSG);
+    logInfo("Broadcast for customer initialized.", customer->name);
 }
 
 void loadFoodNames(Customer* customer) {
@@ -59,12 +61,12 @@ void printMenuSummary(const Customer* customer) {
 }
 
 void initCustomer(Customer* customer, char* port) {
-    initBroadcastCustomer(customer);
+    getInput(STDIN_FILENO, "Enter your name: ", customer->name, BUF_NAME);
 
+    logInfo("Initializing customer.", customer->name);
+    initBroadcastCustomer(customer);
     customer->tcpPort = atoi(port);
     initTCP(&customer->tcpPort);
-
-    getInput(STDIN_FILENO, "Enter your name: ", customer->name, BUF_NAME);
 
     loadFoodNames(customer);
 
@@ -126,6 +128,8 @@ void cli(Customer* customer, FdSet* fdset) {
     char msg[BUF_MSG] = {STRING_END};
 
     getInput(STDIN_FILENO, NULL, msg, BUF_MSG);
+
+    broadcast(customer, REG_REQ_MSG);
 
     if (!strcmp(msg, "help"))
         printHelp(customer);

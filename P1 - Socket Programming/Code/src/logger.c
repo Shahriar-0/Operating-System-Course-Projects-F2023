@@ -1,12 +1,9 @@
 #include "logger.h"
 
-
 int writeToFile(const char* filename, const char* txt) {
-    char fname[BUF_NAME + 10] = {'\0'};
-    // strcpy(fname, filename);
+    char fname[BUF_NAME] = {'\0'};
     sprintf(fname, "%s%s", LOG_FOLDER_ADD, filename);
-    char* ext = ".txt";
-    if (ext != NULL) strcat(fname, ext);
+    strcat(fname, ".log");
 
     chmod(fname, S_IWUSR | S_IRUSR);
     int fd = open(fname, O_CREAT | O_WRONLY | O_APPEND);
@@ -25,7 +22,6 @@ void logLamination() {
 void logNormal(const char* msg, char* name) {
     write(STDOUT_FILENO, msg, strlen(msg));
     write(STDOUT_FILENO, "\n", 1);
-    writeToFile(name, msg);
 }
 
 void logInput(const char* msg) {
@@ -38,6 +34,7 @@ void logMsg(const char* msg, char* name) {
     write(STDOUT_FILENO, msg, strlen(msg));
     write(STDERR_FILENO, "\n", 1);
     writeToFile(name, msg);
+    writeToFile(name, "\n");
 }
 
 void logInfo(const char* msg, char* name) {
@@ -45,6 +42,7 @@ void logInfo(const char* msg, char* name) {
     write(STDOUT_FILENO, msg, strlen(msg));
     write(STDOUT_FILENO, "\n", 1);
     writeToFile(name, msg);
+    writeToFile(name, "\n");
 }
 
 void logWarning(const char* msg, char* name) {
@@ -52,6 +50,7 @@ void logWarning(const char* msg, char* name) {
     write(STDOUT_FILENO, msg, strlen(msg));
     write(STDOUT_FILENO, "\n", 1);
     writeToFile(name, msg);
+    writeToFile(name, "\n");
 }
 
 void logError(const char* msg, char* name) {
@@ -59,6 +58,7 @@ void logError(const char* msg, char* name) {
     write(STDERR_FILENO, msg, strlen(msg));
     write(STDERR_FILENO, "\n", 1);
     writeToFile(name, msg);
+    writeToFile(name, "\n");
 }
 
 void logBrightRed(const char* msg) {
