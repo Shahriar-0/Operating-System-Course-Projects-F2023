@@ -1,5 +1,6 @@
 PATH_SRC   	   := src
 PATH_BUILD 	   := build
+PATH_LOG   	   := log
 PATH_BIN   	   := $(PATH_BUILD)/bin
 PATH_OBJ   	   := $(PATH_BUILD)/obj
 PATH_DEP   	   := $(PATH_OBJ)/__dep__
@@ -72,6 +73,7 @@ clean: clean-obj clean-dep clean-exe
 clean-obj: ; $(RMDIR) $(PATH_OBJ)/*
 clean-dep: ; $(RMDIR) $(PATH_DEP)/*
 clean-exe: ; $(RMDIR) $(PATH_BIN)/*
+clean-log: ; $(RMDIR) $(PATH_LOG)/*
 delete-build: ; $(RMDIR) $(PATH_BUILD)
 
 ARGS ?=
@@ -80,5 +82,5 @@ run-restaurant: ; @cd $(PATH_BIN) && ./$(OUT_EXE_RESTAURANT) $(ARGS)
 run-supplier: ; @cd $(PATH_BIN) && ./$(OUT_EXE_SUPPLIER) $(ARGS)
 
 help:
-	@echo Targets: all clean clean-obj clean-dep clean-exe delete-build run-customer run-restaurant run-supplier
+	@echo Targets: all clean clean-obj clean-dep clean-exe clean-log delete-build run-customer run-restaurant run-supplier
 	@echo '(make run ARGS="arg1 arg2...")'

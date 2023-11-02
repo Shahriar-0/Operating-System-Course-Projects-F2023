@@ -49,22 +49,154 @@ void printMenu(const Restaurant* restaurant) {
     logInfo("Menu printed.", restaurant->name);
 }
 
+void broadcast(Restaurant* restaurant, char* msg) {
+    sendto(restaurant->bcast.fd, msg, strlen(msg), 0, (struct sockaddr*)&restaurant->bcast.addr,
+           sizeof(restaurant->bcast.addr));
+}
+
 int initBroadcastRestaurant(Restaurant* restaurant) {
-    logInfo("Initializing broadcast for restaurant.", restaurant->name);
-    // TODO: complete this
-    logInfo("Broadcast for restaurant initialized.", restaurant->name);
+    int bcfd = initBroadcast(&restaurant->bcast.addr);
+    if (bcfd < 0) return bcfd;
+    restaurant->bcast.fd = bcfd;
+
+    broadcast(restaurant, REG_REQ_MSG);
 }
 
 void initRestaurant(Restaurant* restaurant, char* port) {
-    logInfo("Initializing restaurant.", restaurant->name);
     initBroadcastRestaurant(restaurant);
 
     restaurant->tcpPort = atoi(port);
     initTCP(&restaurant->tcpPort);
 
+    getInput(STDIN_FILENO, "Enter restaurant name: ", restaurant->name, BUF_NAME);
+
     loadMenu(restaurant);
     restaurant->state = OPEN;
     logInfo("Restaurant initialized.", restaurant->name);
+}
+
+void printHelp(Restaurant* restaurant) {
+    logNormal("Available commands:", restaurant->name);
+    logNormal("    menu: print menu", restaurant->name);
+    logNormal("    open: open restaurant", restaurant->name);
+    logNormal("    close: close restaurant", restaurant->name);
+    logNormal("    exit: exit program", restaurant->name);
+}
+
+void openRestaurant(Restaurant* restaurant) {
+    if (restaurant->state == OPEN) {
+        logError("Restaurant is already open.", restaurant->name);
+        return;
+    }
+    restaurant->state = OPEN;
+    logInfo("Restaurant opened.", restaurant->name);
+}
+
+void closeRestaurant(Restaurant* restaurant) {
+    if (restaurant->state == CLOSED) {
+        logError("Restaurant is already closed.", restaurant->name);
+        return;
+    }
+    restaurant->state = CLOSED;
+    logInfo("Restaurant closed.", restaurant->name);
+}
+
+void cli(Restaurant* restaurant, FdSet* fdset) {
+    char msgBuf[BUF_MSG] = {STRING_END};
+    getInput(STDIN_FILENO, NULL, msgBuf, BUF_MSG);
+
+    if (!strcmp(msgBuf, "help")) 
+        printHelp(restaurant);
+    else if (!strcmp(msgBuf, "menu")) 
+        printMenu(restaurant);
+    else if (!strcmp(msgBuf, "open")) 
+        openRestaurant(restaurant);
+    else if (!strcmp(msgBuf, "close")) 
+        closeRestaurant(restaurant);
+    else if (!strcmp(msgBuf, "exit")) {
+        logInfo("Exiting program.", restaurant->name);
+        exit(EXIT_SUCCESS);
+    } else 
+        logError("Invalid command.", restaurant->name);
+}
+
+void UDPHandler(Restaurant* restaurant, FdSet* fdset) {
+    char msgBuf[BUF_MSG] = {STRING_END};
+    int recvCount = recvfrom(restaurant->bcast.fd, msgBuf, BUF_MSG, 0, NULL, NULL);
+    if (recvCount == 0) {
+        logError("Error receiving broadcast.", restaurant->name);
+        return;
+    }
+
+    if (!strcmp(msgBuf, REG_REQ_MSG))
+        broadcast(restaurant, serializerRestaurant(restaurant, REGISTERING));
+    else {
+        char* name;
+        int port;
+        BroadcastType type;
+        deserializer(msgBuf, &name, &port, &type);
+        if (!strcmp(restaurant->name, name) && restaurant->tcpPort != port) {
+            int fd = connectServer(port);
+            send(fd, TERMINATE_MSG, strlen(TERMINATE_MSG), 0);
+            return;
+        }
+    }
+}
+
+void newConnectionHandler(int fd, Restaurant* restaurant, FdSet* fdset) {
+    logInfo("New connection request.", restaurant->name);
+    struct sockaddr_in addr;
+    socklen_t addrlen = sizeof(addr);
+    int newfd = accept(fd, (struct sockaddr*)&addr, &addrlen);
+    if (newfd < 0) {
+        logError("Error accepting new connection.", restaurant->name);
+        return;
+    }
+    FD_SETTER(newfd, fdset);
+    logInfo("New connection accepted.", restaurant->name);
+}
+
+void chatHandler(int fd, char* msgBuf, Restaurant* restaurant, FdSet* fdset) {
+    int recvCount = recv(fd, msgBuf, BUF_MSG, 0);
+    if (recvCount == 0) {
+        logInfo("Connection closed.", restaurant->name);
+        close(fd);
+        FD_CLRER(fd, fdset);
+        return;
+    }
+
+
+}
+
+void interface(Restaurant* restaurant) {
+    char msgBuf[BUF_MSG];
+
+    FdSet fdset;
+    InitFdSet(&fdset, restaurant->tcpPort);
+
+    while (1) {
+        cliPrompt();
+        memset(msgBuf, '\0', BUF_MSG);
+        fdset.working = fdset.master;
+        select(fdset.max + 1, &fdset.working, NULL, NULL, NULL);
+
+    
+        for (int i = 0; i <= fdset.max; ++i) {
+            if (!FD_ISSET(i, &fdset.working)) continue;
+
+            // this if is for having a clean interface when receiving messages
+            if (i != STDIN_FILENO) write(STDOUT_FILENO, CLEAR_LINE_ANSI, CLEAR_LINE_LEN);
+
+            if (i == STDIN_FILENO)
+                cli(restaurant, &fdset);
+            else if (i == restaurant->bcast.fd)
+                UDPHandler(restaurant, &fdset);
+            else if (i == restaurant->tcpPort)
+                newConnectionHandler(i, restaurant, &fdset);
+            else
+                chatHandler(i, msgBuf, restaurant, &fdset);
+        }
+    }
 }
 
 int main(int argc, char** argv) {
@@ -76,4 +208,7 @@ int main(int argc, char** argv) {
     Restaurant restaurant;
     restaurant.tcpPort = atoi(argv[1]);
     initRestaurant(&restaurant, argv[1]);
+
+    
+    interface(&restaurant);
 }

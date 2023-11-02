@@ -93,7 +93,7 @@ void chatHandler(int fd, char* msgBuf, Supplier* supplier, FdSet* fdset) {
 
     char msg[BUF_MSG] = {STRING_END};
     snprintf(msg, BUF_MSG, "You have a new request for %s", name);
-    logMsg(msg);
+    logMsg(msg, name);
 
     yesNoPromptSupplier(name, port);
 }

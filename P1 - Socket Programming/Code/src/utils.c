@@ -11,8 +11,8 @@ void printNum(int fd, int num) {
     write(fd, buffer, strlen(buffer));
 }
 
-void getInput(int fd, const char* prompt, char* dst, size_t dstLen, char* name) {
-    if (prompt != NULL) logInput(prompt, name);
+void getInput(int fd, const char* prompt, char* dst, size_t dstLen) {
+    if (prompt != NULL) logInput(prompt);
     int cread = read(fd, dst, dstLen);
     if (cread <= 0) {
         errnoPrint();

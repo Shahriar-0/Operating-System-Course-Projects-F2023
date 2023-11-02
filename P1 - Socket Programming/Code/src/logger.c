@@ -28,10 +28,9 @@ void logNormal(const char* msg, char* name) {
     writeToFile(name, msg);
 }
 
-void logInput(const char* msg, char* name) {
+void logInput(const char* msg) {
     write(STDOUT_FILENO, ANSI_GRN "[Input] " ANSI_RST, 8 + ANSI_LEN);
     write(STDOUT_FILENO, msg, strlen(msg));
-    writeToFile(name, msg);
 }
 
 void logMsg(const char* msg, char* name) {

@@ -4,9 +4,10 @@
 
 int timedOut = 0;
 int chatSocket = -1;
+char* NAME;
 
 void handleTimeout(int sig) {
-    logWarning("Timeout (90s): Disconnected from discussion.");
+    perror("Timeout (90s): Disconnected from discussion.");
     timedOut = 1;
     close(chatSocket);
 }
@@ -17,13 +18,11 @@ void broadcast(Customer* customer, char* msg) {
 }
 
 int initBroadcastCustomer(Customer* customer) {
-    logInfo("Initializing broadcast for customer.", customer->name);
     int bcfd = initBroadcast(&customer->bcast.addr);
     if (bcfd < 0) return bcfd;
     customer->bcast.fd = bcfd;
 
     broadcast(customer, REG_REQ_MSG);
-    logInfo("Broadcast for customer initialized.", customer->name);
 }
 
 void loadFoodNames(Customer* customer) {
@@ -60,15 +59,14 @@ void printMenuSummary(const Customer* customer) {
 }
 
 void initCustomer(Customer* customer, char* port) {
-    logInfo("Initializing customer.", customer->name);
     initBroadcastCustomer(customer);
 
     customer->tcpPort = atoi(port);
     initTCP(&customer->tcpPort);
 
-    loadFoodNames(customer);
-
     getInput(STDIN_FILENO, "Enter your name: ", customer->name, BUF_NAME);
+
+    loadFoodNames(customer);
 
     customer->restaurantSize = 0;
 
@@ -127,7 +125,7 @@ void printRestaurants(Customer* customer) {
 void cli(Customer* customer, FdSet* fdset) {
     char msg[BUF_MSG] = {STRING_END};
 
-    getInput(STDIN_FILENO, "Enter command: ", msg, BUF_MSG);
+    getInput(STDIN_FILENO, NULL, msg, BUF_MSG);
 
     if (!strcmp(msg, "help"))
         printHelp(customer);
@@ -239,7 +237,7 @@ void interface(Customer* customer) {
 
     FdSet fdset;
     InitFdSet(&fdset, customer->bcast.fd);
-
+    
     while (1) {
         cliPrompt();
         memset(msgBuf, STRING_END, BUF_MSG);
@@ -266,7 +264,7 @@ void interface(Customer* customer) {
 
 int main(int argc, char** argv) {
     if (argc != 2) {
-        logError("Usage: ./customer <port>");
+        perror("Usage: ./customer <port>");
         exit(EXIT_FAILURE);
     }
 

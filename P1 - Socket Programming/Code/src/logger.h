@@ -5,12 +5,12 @@
 #include "define.h"
 
 // Write txt to filename. Returns 1 on error, 0 on success.
-int writeToFile(const char* filename, const char* ext, const char* txt);
+int writeToFile(const char* filename, const char* txt);
 
 void logLamination();
 
 void logNormal(const char* msg, char* name);
-void logInput(const char* msg, char* name);
+void logInput(const char* msg);
 void logMsg(const char* msg, char* name);
 void logInfo(const char* msg, char* name);
 void logWarning(const char* msg, char* name);

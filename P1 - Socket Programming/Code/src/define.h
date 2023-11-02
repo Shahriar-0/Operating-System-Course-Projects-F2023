@@ -39,18 +39,17 @@
 #define MAX_LISTEN      4
 #define UDP_PORT        8080
 #define LOCAL_HOST      "127.0.0.1"
-#define STRING_END      '\0'
-#define BCAST_IN_DELIM  '|'
-#define BCAST_OUT_DELIM '-'
-#define REQ_IN_DELIM    '|'
-#define REQ_DELIM       ':'
+#define STRING_END      "\0"
+#define BCAST_IN_DELIM  "|"
+#define BCAST_OUT_DELIM "-"
+#define REQ_IN_DELIM    "|"
 #define REJECTED_MSG    "REJECTED"
 #define ACCEPTED_MSG    "ACCEPTED"
 #define REG_REQ_MSG     "REG_REQ"
 #define TERMINATE_MSG   "TERMINATE"
 #define CLOSE_REST_MSG  "CLOSE_REST"
 #define OPEN_REST_MSG   "OPEN_REST"
-#define REQ_DELIM       ':'
+#define REQ_DELIM       ":"
 // clang-format on
 
 // types and states
