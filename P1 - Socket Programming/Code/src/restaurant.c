@@ -76,6 +76,10 @@ int initBroadcastRestaurant(Restaurant* restaurant) {
 
 void initRestaurant(Restaurant* restaurant, char* port) {
     getInput(STDIN_FILENO, "Enter restaurant name: ", restaurant->name, BUF_NAME);
+    if (!isUniqueName(restaurant->name)) {
+        perror("Name already taken.");
+        exit(EXIT_FAILURE);
+    }
 
     logInfo("Initializing restaurant.", RestaurantLogName(restaurant));
 
@@ -192,15 +196,7 @@ void UDPHandler(Restaurant* restaurant, FdSet* fdset) {
     if (!strcmp(msgBuf, REG_REQ_MSG))
         broadcast(restaurant, serializerRestaurant(restaurant, REGISTERING));
     else {
-        char* name;
-        int port;
-        BroadcastType type;
-        deserializer(msgBuf, &name, &port, &type);
-        if (!strcmp(RestaurantLogName(restaurant), name) && restaurant->tcpPort != port) {
-            int fd = connectServer(port);
-            send(fd, TERMINATE_MSG, strlen(TERMINATE_MSG), 0);
-            return;
-        }
+        // TODO
     }
 }
 

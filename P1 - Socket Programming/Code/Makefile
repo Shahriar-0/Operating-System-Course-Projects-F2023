@@ -69,7 +69,7 @@ $(addprefix $(PATH_DEP)/, $(FOLDERS)): ; @$(MKDIR) $@
 		clean clean-obj clean-dep clean-exe delete-build \
 		run-byr run-slr help
 
-clean: clean-obj clean-dep clean-exe
+clean: clean-obj clean-dep clean-exe clean-log
 clean-obj: ; $(RMDIR) $(PATH_OBJ)/*
 clean-dep: ; $(RMDIR) $(PATH_DEP)/*
 clean-exe: ; $(RMDIR) $(PATH_BIN)/*

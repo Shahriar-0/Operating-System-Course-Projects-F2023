@@ -231,3 +231,23 @@ void exitall(char* name) {
     write(STDOUT_FILENO, "Exited successfully.\n", 21);
     exit(EXIT_SUCCESS);
 }
+
+int isUniqueName(char* name) {
+    DIR *dir = opendir(LOG_FOLDER_ADD);
+    if (dir == NULL) {
+        perror("Unable to open directory");
+        return -1;
+    }
+
+    int found = 0;
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (strstr(entry->d_name, name) != NULL) {
+            found = 1;
+            break;
+        }
+    }
+
+    closedir(dir);
+    return !found;
+}

@@ -28,10 +28,14 @@ int initBroadcastSupplier(Supplier* supplier) {
 }
 
 void initSupplier(Supplier* supplier, char* port) {
+    getInput(STDIN_FILENO, "Enter your name: ", supplier->name, BUF_NAME);
+    if (!isUniqueName(supplier->name)) {
+        perror("Name already taken.");
+        exit(EXIT_FAILURE);
+    }
+
     logInfo("Initializing supplier.", SupplierLogName(supplier));
     initBroadcastSupplier(supplier);
-
-    getInput(STDIN_FILENO, "Enter your name: ", supplier->name, BUF_NAME);
 
     supplier->tcpPort = atoi(port);
     initTCP(&supplier->tcpPort);
@@ -64,15 +68,7 @@ void UDPHandler(Supplier* supplier, FdSet* fdset) {
     if (!strcmp(msgBuf, REG_REQ_MSG))
         broadcast(supplier, serializerSupplier(supplier, REGISTERING));
     else {
-        char* name;
-        int port;
-        BroadcastType type;
-        deserializer(msgBuf, &name, &port, &type);
-        if (!strcmp(supplier->name, name) && supplier->tcpPort != port) {
-            int fd = connectServer(port);
-            send(fd, TERMINATE_MSG, strlen(TERMINATE_MSG), 0);
-            return;
-        }
+        // TODO
     }
 }
 
@@ -102,10 +98,10 @@ void chatHandler(int fd, char* msgBuf, Supplier* supplier, FdSet* fdset) {
     // terminate msg
     char* name = strtok(msgBuf, REQ_IN_DELIM);
 
-    if (!strcmp(name, TERMINATE_MSG)) {
-        logError("Duplication in username", SupplierLogName(supplier));
-        exit(EXIT_FAILURE);
-    }
+    // if (!strcmp(name, TERMINATE_MSG)) {
+    //     logError("Duplication in username", SupplierLogName(supplier));
+    //     exit(EXIT_FAILURE);
+    // }
 
     int quantity = atoi(strtok(NULL, REQ_DELIM));
     int port = atoi(strtok(NULL, REQ_DELIM));

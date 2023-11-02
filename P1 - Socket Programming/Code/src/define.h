@@ -4,6 +4,7 @@
 // includes
 #include <arpa/inet.h>
 #include <cjson/cJSON.h>
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -47,7 +48,6 @@
 #define REJECTED_MSG    "REJECTED"
 #define ACCEPTED_MSG    "ACCEPTED"
 #define REG_REQ_MSG     "REG_REQ"
-#define TERMINATE_MSG   "TERMINATE"
 #define CLOSE_REST_MSG  "CLOSE_REST"
 #define OPEN_REST_MSG   "OPEN_REST"
 #define REQ_DELIM       ":"

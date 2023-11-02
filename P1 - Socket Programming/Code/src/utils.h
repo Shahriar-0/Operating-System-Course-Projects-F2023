@@ -41,4 +41,6 @@ char* serializerSupplier(Supplier* supplier, RegisteringState state);
 char* serializerCustomer(Customer* customer, RegisteringState state);
 char* serializerRestaurant(Restaurant* restaurant, RegisteringState state);
 void exitall(char* name);
+int isUniqueName(char* name);
+
 #endif  // UTILS_H_INCLUDE

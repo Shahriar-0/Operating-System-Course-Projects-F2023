@@ -72,6 +72,10 @@ void printMenuSummary(const Customer* customer) {
 
 void initCustomer(Customer* customer, char* port) {
     getInput(STDIN_FILENO, "Enter your name: ", customer->name, BUF_NAME);
+    if (!isUniqueName(customer->name)) {
+        perror("Name already taken.");
+        exit(EXIT_FAILURE);
+    }
 
     logInfo("Initializing customer.", CustomerLogName(customer));
     initBroadcastCustomer(customer);
@@ -175,16 +179,7 @@ void removeRestaurant(Customer* customer, char* name) {
 }
 
 void UDPHandlerChat(char* msgBuf, Customer* customer) {
-    char* name;
-    int port;
-    BroadcastType type;
-    deserializer(msgBuf, name, &port, &type);
-    if (!strcmp(customer->name, name) && customer->tcpPort != port) {
-        int fd = connectServer(port);
-        send(fd, TERMINATE_MSG, strlen(TERMINATE_MSG), 0);
-        return;
-    }
-    if (type == RESTAURANT) addRestaurant(customer, name, port);
+    // TODO
 }
 
 void UDPHandler(Customer* customer, FdSet* fdset) {
@@ -234,16 +229,16 @@ void chatHandler(int fd, char* msgBuf, Customer* customer, FdSet* fdset) {
         return;
     }
 
-    char* cmd = strtok(msgBuf, REQ_DELIM);
-    if (cmd != NULL) {
-        if (!strcmp(cmd, TERMINATE_MSG)) {
-            logInfo("Duplication in username.", CustomerLogName(customer));
-            close(fd);
-            FD_CLRER(fd, fdset);
-        }
-    } else {
-        logNormal(msgBuf, CustomerLogName(customer));
-    }
+    // char* cmd = strtok(msgBuf, REQ_DELIM);
+    // if (cmd != NULL) {
+    //     if (!strcmp(cmd, TERMINATE_MSG)) {
+    //         logInfo("Duplication in username.", CustomerLogName(customer));
+    //         close(fd);
+    //         FD_CLRER(fd, fdset);
+    //     }
+    // } else {
+    //     logNormal(msgBuf, CustomerLogName(customer));
+    // }
 }
 
 void interface(Customer* customer) {
