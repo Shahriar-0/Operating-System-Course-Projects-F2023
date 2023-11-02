@@ -268,13 +268,13 @@ void printWithType(int type) {
     struct dirent* entry;
     while ((entry = readdir(dir)) != NULL) {
         sscanf(entry->d_name, "%[^-]-%d-%d.log", name, &port, &fileType);
-        if (fileType == type && strcmp(name, ".") && strcmp(name, "over")) {
+        if (fileType == type && strcmp(name, ".") && strcmp(name, "over") && strcmp(name, "..")) {
             char out[BUF_CLI] = {STRING_END};
             sprintf(out, "Name: %s, Port: %d", name, port);
             logNormal(out, name);
         }
     }
-    logLamination();
+    logLamination(); 
 
     closedir(dir);
 }

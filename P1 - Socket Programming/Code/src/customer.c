@@ -32,7 +32,6 @@ int initBroadcastCustomer(Customer* customer) {
     if (bcfd < 0) return bcfd;
     customer->bcast.fd = bcfd;
 
-    broadcast(customer, REG_REQ_MSG);
     logInfo("Broadcast for customer initialized.", CustomerLogName(customer));
 }
 
@@ -132,8 +131,6 @@ void cli(Customer* customer, FdSet* fdset) {
     char msg[BUF_MSG] = {STRING_END};
 
     getInput(STDIN_FILENO, NULL, msg, BUF_MSG);
-
-    broadcast(customer, REG_REQ_MSG);
 
     if (!strcmp(msg, "help"))
         printHelp(customer);

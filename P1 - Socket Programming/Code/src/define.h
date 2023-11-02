@@ -47,7 +47,6 @@
 #define REQ_IN_DELIM    "|"
 #define REJECTED_MSG    "REJECTED"
 #define ACCEPTED_MSG    "ACCEPTED"
-#define REG_REQ_MSG     "REG_REQ"
 #define CLOSE_REST_MSG  "CLOSE_REST"
 #define OPEN_REST_MSG   "OPEN_REST"
 #define REQ_DELIM       ":"
