@@ -8,7 +8,7 @@
 // Print the prompt string.
 void cliPrompt();
 // Print a yes/no prompt to the standard output.
-void yesNoPromptSupplier(char* name, unsigned short port);
+void yesNoPrompt(char* name, int quantity, unsigned short port, char* supplierName);
 // Print errno text representation to the standard error output.
 void errnoPrint();
 
@@ -25,7 +25,7 @@ int strToPort(const char* str, unsigned short* res);
 unsigned short strToPortErr(const char* str);
 
 // FdSet
-void InitFdSet(FdSet* fdset, int UDPfd);
+void InitFdSet(FdSet* fdset, int UDPfd, int TCPfd);
 void FD_SETTER(int socket, FdSet* fdset);
 void FD_CLRER(int socket, FdSet* fdset);
 

@@ -69,8 +69,7 @@ int connectServer(unsigned short port) {
     server_address.sin_port = htons(port);
     server_address.sin_addr.s_addr = INADDR_ANY;
 
-    if (connect(fd, (struct sockaddr *)&server_address, sizeof(server_address)) <
-        0) {  // checking for errors
+    if (connect(fd, (struct sockaddr *)&server_address, sizeof(server_address)) < 0) {  // checking for errors
         printf("Error in connecting to server\n");
     }
 

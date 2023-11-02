@@ -44,12 +44,12 @@
 #define STRING_END      '\0'
 #define BCAST_IN_DELIM  "|"
 #define BCAST_OUT_DELIM "-"
-#define REQ_IN_DELIM    "|"
 #define REJECTED_MSG    "REJECTED"
 #define ACCEPTED_MSG    "ACCEPTED"
 #define CLOSE_REST_MSG  "CLOSE_REST"
 #define OPEN_REST_MSG   "OPEN_REST"
 #define REQ_DELIM       ":"
+#define REQ_IN_DELIM    "-"
 #define NAME_DELIM      "-"
 #define LOG_EXT         ".log"
 // clang-format on
@@ -96,6 +96,7 @@ typedef enum { OPEN, CLOSED } RestaurantState;
 typedef struct {
     char name[BUF_NAME];
     unsigned short tcpPort;
+    int tcpFd;
     RestaurantState state;
     BroadcastInfo bcast;
     BroadcastData suppliers[MAX_SUPPLIER];
@@ -114,6 +115,7 @@ typedef struct {
 typedef struct {
     char name[BUF_NAME];
     unsigned short tcpPort;
+    int tcpFd;
     BroadcastInfo bcast;
     char* foods[MAX_FOOD];
     int foodSize;
@@ -124,6 +126,7 @@ typedef struct {
 typedef struct {
     char name[BUF_PNAME];
     unsigned short tcpPort;
+    int tcpFd;
     BroadcastInfo bcast;
 } Supplier;
 #endif  // DEFINE_H_INCLUDE

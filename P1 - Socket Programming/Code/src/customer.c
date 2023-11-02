@@ -78,7 +78,8 @@ void initCustomer(Customer* customer, char* port) {
 
     logInfo("Initializing customer.", CustomerLogName(customer));
     initBroadcastCustomer(customer);
-    initTCP(&customer->tcpPort);
+    
+    customer->tcpFd = initTCP(customer->tcpPort);
 
     loadFoodNames(customer);
 
@@ -180,9 +181,7 @@ void UDPHandler(Customer* customer, FdSet* fdset) {
 
 void newConnectionHandler(int fd, Customer* customer, FdSet* fdset) {
     logInfo("New connection request.", CustomerLogName(customer));
-    struct sockaddr_in addr;
-    socklen_t addrlen = sizeof(addr);
-    int newfd = accept(fd, (struct sockaddr*)&addr, &addrlen);
+    int newfd = accClient(fd);
     if (newfd < 0) {
         logError("Error accepting new connection.", CustomerLogName(customer));
         return;
@@ -191,7 +190,8 @@ void newConnectionHandler(int fd, Customer* customer, FdSet* fdset) {
     logInfo("New connection accepted.", CustomerLogName(customer));
 }
 
-void chatHandler(int fd, char* msgBuf, Customer* customer, FdSet* fdset) {
+void chatHandler(int fd, Customer* customer, FdSet* fdset) {
+    char msgBuf[BUF_MSG] = {STRING_END};
     int recvCount = recv(fd, msgBuf, BUF_MSG, 0);
     if (recvCount == 0) {
         logInfo("Connection closed.", CustomerLogName(customer));
@@ -200,27 +200,14 @@ void chatHandler(int fd, char* msgBuf, Customer* customer, FdSet* fdset) {
         return;
     }
 
-    // char* cmd = strtok(msgBuf, REQ_DELIM);
-    // if (cmd != NULL) {
-    //     if (!strcmp(cmd, TERMINATE_MSG)) {
-    //         logInfo("Duplication in username.", CustomerLogName(customer));
-    //         close(fd);
-    //         FD_CLRER(fd, fdset);
-    //     }
-    // } else {
-    //     logNormal(msgBuf, CustomerLogName(customer));
-    // }
 }
 
 void interface(Customer* customer) {
-    char msgBuf[BUF_MSG] = {STRING_END};
-
     FdSet fdset;
-    InitFdSet(&fdset, customer->bcast.fd);
+    InitFdSet(&fdset, customer->bcast.fd, customer->tcpPort);
 
     while (1) {
         cliPrompt();
-        memset(msgBuf, STRING_END, BUF_MSG);
         fdset.working = fdset.master;
         select(fdset.max + 1, &fdset.working, NULL, NULL, NULL);
 
@@ -234,10 +221,10 @@ void interface(Customer* customer) {
                 cli(customer, &fdset);
             else if (i == customer->bcast.fd)
                 UDPHandler(customer, &fdset);
-            else if (i == customer->tcpPort)
+            else if (i == customer->tcpFd)
                 newConnectionHandler(i, customer, &fdset);
             else
-                chatHandler(i, msgBuf, customer, &fdset);
+                chatHandler(i, customer, &fdset);
         }
     }
 }

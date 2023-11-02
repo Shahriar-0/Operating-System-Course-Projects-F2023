@@ -34,18 +34,17 @@ int setupSocket(unsigned short port, struct sockaddr_in* addr) {
     setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
     addr->sin_family = AF_INET;
-    addr->sin_addr.s_addr = INADDR_ANY;
     addr->sin_port = htons(port);
+    addr->sin_addr.s_addr = INADDR_ANY;
     memset(addr->sin_zero, STRING_END, sizeof(addr->sin_zero));
 
     return serverFd;
 }
 
 int initTCP(unsigned short port) {
-
     int serverFd;
     struct sockaddr_in addr;
-    setupSocket(port, &addr);
+    serverFd = setupSocket(port, &addr);
 
     bind(serverFd, (struct sockaddr*)&addr, sizeof(addr));
     listen(serverFd, MAX_LISTEN);
@@ -62,17 +61,15 @@ int accClient(int socketId) {
 }
 
 int connectServer(unsigned short port) {
-    int serverId = socket(PF_INET, SOCK_STREAM, 0);
-    if (serverId < 0) return serverId;
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    struct sockaddr_in server_address;
 
-    struct sockaddr_in addr;
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
-    addr.sin_addr.s_addr = inet_addr(BCAST_IP);
-    memset(addr.sin_zero, STRING_END, sizeof(addr.sin_zero));
+    server_address.sin_family = AF_INET;
+    server_address.sin_port = htons(port);
+    server_address.sin_addr.s_addr = INADDR_ANY;
 
-    int res = connect(serverId, (struct sockaddr*)&addr, sizeof(addr));
-    if (res < 0) return res;
+    if (connect(fd, (struct sockaddr*)&server_address, sizeof(server_address)) < 0) 
+        perror("Error connecting to server");
 
-    return serverId;
+    return fd;
 }

@@ -75,12 +75,13 @@ void FD_CLRER(int socket, FdSet* fdset) {
     if (socket == fdset->max) fdset->max--;
 }
 
-void InitFdSet(FdSet* fdset, int UDPfd) {
+void InitFdSet(FdSet* fdset, int UDPfd, int TCPfd) {
     fdset->max = 0;
     FD_ZERO(&fdset->master);
     FD_ZERO(&fdset->working);
     FD_SETTER(STDIN_FILENO, fdset);
     FD_SETTER(UDPfd, fdset);
+    FD_SETTER(TCPfd, fdset);
 }
 
 ////////////////////// JSON //////////////////////
@@ -150,26 +151,6 @@ int deserializer(char* msg, char** name, int* port, EXT* type) {
     return state == REGISTERING;
 }
 
-void yesNoPromptSupplier(char* name, unsigned short port) {
-    char msg[BUF_MSG] = {STRING_END};
-
-    char ans[BUF_MSG];
-    getInput(STDIN_FILENO, "Accept? (y/n)", ans, BUF_MSG);
-
-    int ansFd = connectServer(port);
-
-    if (!strcmp(ans, "y")) {
-        snprintf(msg, BUF_MSG, "accepted by %s.", name);
-        logInfo(msg, name);
-        send(ansFd, ACCEPTED_MSG, strlen(ACCEPTED_MSG), 0);
-    } else if (!strcmp(ans, "n")) {
-        snprintf(msg, BUF_MSG, "rejected by %s.", name);
-        logInfo(msg, name);
-        send(ansFd, REJECTED_MSG, strlen(REJECTED_MSG), 0);
-    } else {
-        logError("Invalid answer.", name);
-    }
-}
 
 // state | name | tcpPort | type
 char* serializerSupplier(Supplier* supplier, RegisteringState state) {

@@ -31,7 +31,7 @@ void initSupplier(Supplier* supplier, char* port) {
     logInfo("Initializing supplier.", SupplierLogName(supplier));
     initBroadcastSupplier(supplier);
 
-    initTCP(&supplier->tcpPort);
+    supplier->tcpFd = initTCP(supplier->tcpPort);
 
     logInfo("Supplier initialized.", SupplierLogName(supplier));
 }
@@ -58,9 +58,7 @@ void UDPHandler(Supplier* supplier, FdSet* fdset) {
 
 void newConnectionHandler(int fd, Supplier* supplier, FdSet* fdset) {
     logInfo("New connection request.", SupplierLogName(supplier));
-    struct sockaddr_in addr;
-    socklen_t addrlen = sizeof(addr);
-    int newfd = accept(fd, (struct sockaddr*)&addr, &addrlen);
+    int newfd = accClient(fd);
     if (newfd < 0) {
         logError("Error accepting new connection.", SupplierLogName(supplier));
         return;
@@ -69,7 +67,32 @@ void newConnectionHandler(int fd, Supplier* supplier, FdSet* fdset) {
     logInfo("New connection accepted.", SupplierLogName(supplier));
 }
 
-void chatHandler(int fd, char* msgBuf, Supplier* supplier, FdSet* fdset) {
+void yesNoPrompt(char* name, int quantity, unsigned short port, char* supplierName) {
+    char msg[BUF_MSG] = {STRING_END};
+
+    char ans[BUF_MSG];
+    getInput(STDIN_FILENO, "Accept? (y/n)", ans, BUF_MSG);
+
+    int ansFd = connectServer(port);
+
+    // result-name:quantity
+    if (!strcmp(ans, "y")) {
+        logInfo("Accept request", supplierName);
+        memset(msg, STRING_END, BUF_MSG);
+        sprintf(msg, "%s-%s:%d", ACCEPTED_MSG, name, quantity);
+        send(ansFd, msg, strlen(msg), 0);
+    } else if (!strcmp(ans, "n")) {
+        logInfo("Reject request", supplierName);
+        memset(msg, STRING_END, BUF_MSG);
+        sprintf(msg, "%s-%s:%d", REJECTED_MSG, name, quantity);
+        send(ansFd, msg, strlen(msg), 0);
+    } else {
+        logError("Invalid answer.", supplierName);
+    }
+}
+
+void chatHandler(int fd, Supplier* supplier, FdSet* fdset) {
+    char msgBuf[BUF_MSG] = {STRING_END};
     int recvCount = recv(fd, msgBuf, BUF_MSG, 0);
     if (recvCount == 0) {
         logInfo("Connection closed.", SupplierLogName(supplier));
@@ -78,25 +101,28 @@ void chatHandler(int fd, char* msgBuf, Supplier* supplier, FdSet* fdset) {
         return;
     }
 
+    // port:ingredient:quantity
+    int port = atoi(strtok(msgBuf, REQ_DELIM));
+    char* name = strtok(NULL, REQ_DELIM);
+    int quantity = atoi(strtok(NULL, REQ_DELIM));
+    char msg[BUF_MSG] = {STRING_END};
+    sprintf(msg, "You have new request for %s with quantity of %d from port %d", name, quantity, port);
+    logMsg(msg, SupplierLogName(supplier));
 
-    yesNoPromptSupplier(name, port);
+    yesNoPrompt(name, quantity, port, SupplierLogName(supplier));
 }
 
 void interface(Supplier* supplier) {
-    char msgBuf[BUF_MSG] = {STRING_END};
-
     FdSet fdset;
-    InitFdSet(&fdset, supplier->bcast.fd);
-
+    InitFdSet(&fdset, supplier->bcast.fd, supplier->tcpFd);
+    
     while (1) {
         cliPrompt();
-        memset(msgBuf, STRING_END, BUF_MSG);
         fdset.working = fdset.master;
         select(fdset.max + 1, &fdset.working, NULL, NULL, NULL);
 
         for (int i = 0; i <= fdset.max; ++i) {
             if (!FD_ISSET(i, &fdset.working)) continue;
-
             // this if is for having a clean interface when receiving messages
             if (i != STDIN_FILENO) write(STDOUT_FILENO, CLEAR_LINE_ANSI, CLEAR_LINE_LEN);
 
@@ -104,10 +130,10 @@ void interface(Supplier* supplier) {
                 cli(supplier, &fdset);
             else if (i == supplier->bcast.fd)
                 UDPHandler(supplier, &fdset);
-            else if (i == supplier->tcpPort)
+            else if (i == supplier->tcpFd)
                 newConnectionHandler(i, supplier, &fdset);
             else
-                chatHandler(i, msgBuf, supplier, &fdset);
+                chatHandler(i, supplier, &fdset);
         }
     }
 }

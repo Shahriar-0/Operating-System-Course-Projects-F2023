@@ -49,7 +49,7 @@ void addIngredient(Restaurant* restaurant, char* ingredientName, int quantity) {
             return;
         }
     }
-    strncpy(restaurant->ingredients[restaurant->ingredientSize], ingredientName, BUF_NAME);
+    restaurant->ingredients[restaurant->ingredientSize] = strdup(ingredientName);
     restaurant->quantity[restaurant->ingredientSize] = quantity;
     restaurant->ingredientSize++;
     logInfo("Ingredient added.", RestaurantLogName(restaurant));
@@ -125,7 +125,6 @@ void logFood(Restaurant* restaurant, FoodRequest* foodRequest, RequestState stat
     logError("Food can't be logged.", RestaurantLogName(restaurant));
 }
 
-
 void printMenu(const Restaurant* restaurant) {
     logInfo("Printing menu.", RestaurantLogName(restaurant));
     logLamination();
@@ -171,7 +170,10 @@ void initRestaurant(Restaurant* restaurant, char* port) {
 
     initBroadcastRestaurant(restaurant);
 
-    initTCP(&restaurant->tcpPort);
+    restaurant->tcpFd = initTCP(restaurant->tcpPort);
+
+    restaurant->handledRequestsSize = restaurant->pendingRequestSize 
+              = restaurant->ingredientSize = restaurant->menuSize = 0;
 
     loadMenu(restaurant);
     restaurant->state = OPEN;
@@ -236,13 +238,10 @@ void printIngredients(const Restaurant* restaurant) {
     logInfo("Printing ingredients.", RestaurantLogName(restaurant));
     logLamination();
     logNormal("Ingredients:", RestaurantLogName(restaurant));
-    for (int i = 0; i < restaurant->menuSize; i++) {
-        const Food* food = &restaurant->menu[i];
-        for (int j = 0; j < food->ingredientSize; j++) {
-            char buf[BUF_MSG] = {STRING_END};
-            sprintf(buf, "     - %s: %d", food->ingredients[j], food->quantity[j]);
-            logNormal(buf, RestaurantLogName(restaurant));
-        }
+    for (int i = 0; i < restaurant->ingredientSize; i++) {
+        char buf[BUF_MSG] = {STRING_END};
+        sprintf(buf, "%d. %s: %d", i + 1, restaurant->ingredients[i], restaurant->quantity[i]);
+        logNormal(buf, RestaurantLogName(restaurant));
     }
     logLamination();
     logInfo("Ingredients printed.", RestaurantLogName(restaurant));
@@ -272,7 +271,26 @@ void printHandledRequests(Restaurant* restaurant) {
     logInfo("Handled requests printed.", RestaurantLogName(restaurant));
 }
 
-void printSuppliers(Restaurant* restaurant) { printWithType(SUPPLIER); }
+void printSuppliers(Restaurant* restaurant) {  printWithType(SUPPLIER); }
+
+void orderIngredient(Restaurant* restaurant) {
+    char token[BUF_NAME];
+    char ingredientName[BUF_NAME] = {STRING_END};
+    int quantity = 0;
+    int port;
+    getInput(STDIN_FILENO, "Enter ingredient name: ", ingredientName, BUF_NAME);
+    getInput(STDIN_FILENO, "Enter quantity: ", token, BUF_MSG);
+    quantity = atoi(token);
+    getInput(STDIN_FILENO, "Enter supplier port: ", token, BUF_MSG);
+    port = atoi(token);
+    int serverFd = connectServer(port);
+
+    // port:ingredient:quantity
+    char msg[BUF_MSG] = {STRING_END};
+    sprintf(msg, "%d%s%s%s%d", restaurant->tcpPort, REQ_DELIM, ingredientName, REQ_DELIM, quantity);
+    send(serverFd, msg, strlen(msg), 0);
+    logInfo("Ingredient request sent.", RestaurantLogName(restaurant));
+}
 
 void cli(Restaurant* restaurant, FdSet* fdset) {
     char msgBuf[BUF_MSG] = {STRING_END};
@@ -294,6 +312,8 @@ void cli(Restaurant* restaurant, FdSet* fdset) {
         printHandledRequests(restaurant);
     else if (!strcmp(msgBuf, "suppliers"))
         printSuppliers(restaurant);
+    else if (!strcmp(msgBuf, "order"))
+        orderIngredient(restaurant);
     else if (!strcmp(msgBuf, "exit"))
         exiting(restaurant);
     else
@@ -313,9 +333,7 @@ void UDPHandler(Restaurant* restaurant, FdSet* fdset) {
 
 void newConnectionHandler(int fd, Restaurant* restaurant, FdSet* fdset) {
     logInfo("New connection request.", RestaurantLogName(restaurant));
-    struct sockaddr_in addr;
-    socklen_t addrlen = sizeof(addr);
-    int newfd = accept(fd, (struct sockaddr*)&addr, &addrlen);
+    int newfd = accClient(fd);
     if (newfd < 0) {
         logError("Error accepting new connection.", RestaurantLogName(restaurant));
         return;
@@ -324,7 +342,8 @@ void newConnectionHandler(int fd, Restaurant* restaurant, FdSet* fdset) {
     logInfo("New connection accepted.", RestaurantLogName(restaurant));
 }
 
-void chatHandler(int fd, char* msgBuf, Restaurant* restaurant, FdSet* fdset) {
+void chatHandler(int fd, Restaurant* restaurant, FdSet* fdset) {
+    char msgBuf[BUF_MSG] = {STRING_END};
     int recvCount = recv(fd, msgBuf, BUF_MSG, 0);
     if (recvCount == 0) {
         logInfo("Connection closed.", RestaurantLogName(restaurant));
@@ -332,17 +351,50 @@ void chatHandler(int fd, char* msgBuf, Restaurant* restaurant, FdSet* fdset) {
         FD_CLRER(fd, fdset);
         return;
     }
+
+    char* type = strtok(msgBuf, REQ_IN_DELIM);
+    
+    if (!strcmp(type, ACCEPTED_MSG)) {
+        logMsg("Ingredient request accepted.", RestaurantLogName(restaurant));
+        char* name = strtok(NULL, REQ_DELIM);
+        int quantity = atoi(strtok(NULL, REQ_DELIM));
+        addIngredient(restaurant, name, quantity);
+    } else if (!strcmp(type, REJECTED_MSG)) {
+        logMsg("Ingredient request rejected.", RestaurantLogName(restaurant));
+    }
+    // else if (!strcmp(type, REQUEST_MSG)) {
+    //     logMsg("Ingredient request received.", RestaurantLogName(restaurant));
+    //     char* customerName = strtok(NULL, REQ_IN_DELIM);
+    //     char* foodName = strtok(NULL, REQ_IN_DELIM);
+    //     int customerPort = atoi(strtok(NULL, REQ_IN_DELIM));
+    //     FoodRequest foodRequest = {STRING_END};
+    //     strncpy(foodRequest.customerName, customerName, BUF_NAME);
+    //     strncpy(foodRequest.foodName, foodName, BUF_NAME);
+    //     foodRequest.customerPort = customerPort;
+    //     canServeFood(restaurant, &foodRequest);
+    //     serveFood(restaurant, &foodRequest);
+    //     addPendingRequest(restaurant, &foodRequest);
+    //     logFood(restaurant, &foodRequest, PENDING);
+    // }
+    // else if (!strcmp(type, DELIVERED_MSG)) {
+    //     logMsg("Ingredient request delivered.", RestaurantLogName(restaurant));
+    //     char* customerName = strtok(NULL, REQ_IN_DELIM);
+    //     char* foodName = strtok(NULL, REQ_IN_DELIM);
+    //     int customerPort = atoi(strtok(NULL, REQ_IN_DELIM));
+    //     FoodRequest foodRequest = {STRING_END};
+    //     strncpy(foodRequest.customerName, customerName, BUF_NAME);
+    //     strncpy(foodRequest.foodName, foodName, BUF_NAME);
+    //     foodRequest.customerPort = customerPort;
+    //     logFood(restaurant, &foodRequest, DELIVERED);
+    // }
 }
 
 void interface(Restaurant* restaurant) {
-    char msgBuf[BUF_MSG];
-
     FdSet fdset;
-    InitFdSet(&fdset, restaurant->tcpPort);
+    InitFdSet(&fdset, restaurant->bcast.fd, restaurant->tcpFd);
 
     while (1) {
         cliPrompt();
-        memset(msgBuf, '\0', BUF_MSG);
         fdset.working = fdset.master;
         select(fdset.max + 1, &fdset.working, NULL, NULL, NULL);
 
@@ -351,15 +403,16 @@ void interface(Restaurant* restaurant) {
 
             // this if is for having a clean interface when receiving messages
             if (i != STDIN_FILENO) write(STDOUT_FILENO, CLEAR_LINE_ANSI, CLEAR_LINE_LEN);
+            
 
             if (i == STDIN_FILENO)
                 cli(restaurant, &fdset);
             else if (i == restaurant->bcast.fd)
                 UDPHandler(restaurant, &fdset);
-            else if (i == restaurant->tcpPort)
+            else if (i == restaurant->tcpFd)
                 newConnectionHandler(i, restaurant, &fdset);
             else
-                chatHandler(i, msgBuf, restaurant, &fdset);
+                chatHandler(i, restaurant, &fdset);
         }
     }
 }
