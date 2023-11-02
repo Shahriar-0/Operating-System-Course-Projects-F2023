@@ -12,8 +12,6 @@ void yesNoPromptSupplier(char* name, unsigned short port);
 // Print errno text representation to the standard error output.
 void errnoPrint();
 
-
-
 // Print a number to file descriptor fd
 void printNum(int fd, int num);
 void getInput(int fd, const char* prompt, char* dst, size_t dstLen);

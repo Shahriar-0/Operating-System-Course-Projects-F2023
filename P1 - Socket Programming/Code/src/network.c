@@ -46,7 +46,7 @@ int initTCP(unsigned short port) {
     int serverFd;
     struct sockaddr_in addr;
     setupSocket(port, &addr);
-  
+
     bind(serverFd, (struct sockaddr*)&addr, sizeof(addr));
     listen(serverFd, MAX_LISTEN);
 
@@ -76,4 +76,3 @@ int connectServer(unsigned short port) {
 
     return serverId;
 }
-

@@ -4,14 +4,13 @@
 
 char* RestaurantLogName(Restaurant* restaurant) {
     char* name[BUF_NAME];
-    EXT type = (restaurant->state == OPEN)? RESTAURANT : RESTAURANT_CLOSE;
-    sprintf(name, "%s%s%d%s%d", restaurant->name, NAME_DELIM, restaurant->tcpPort, NAME_DELIM, type);
+    EXT type = (restaurant->state == OPEN) ? RESTAURANT : RESTAURANT_CLOSE;
+    sprintf(name, "%s%s%d%s%d", restaurant->name, NAME_DELIM, restaurant->tcpPort, NAME_DELIM,
+            type);
     return strdup(name);
 }
 
-void exiting(Restaurant* restaurant) {
-    exitall(RestaurantLogName(restaurant));
-}
+void exiting(Restaurant* restaurant) { exitall(RestaurantLogName(restaurant)); }
 
 loadMenu(Restaurant* restaurant) {
     logInfo("Loading menu.", RestaurantLogName(restaurant));
@@ -71,7 +70,6 @@ int initBroadcastRestaurant(Restaurant* restaurant) {
     if (bcfd < 0) return bcfd;
     restaurant->bcast.fd = bcfd;
 
-    broadcast(restaurant, REG_REQ_MSG);
     logInfo("Broadcast for restaurant initialized.", RestaurantLogName(restaurant));
 }
 
@@ -113,13 +111,19 @@ void openRestaurant(Restaurant* restaurant) {
         logError("Restaurant is already open.", RestaurantLogName(restaurant));
         return;
     }
-    char* src, dst;
-    src = RestaurantLogName(restaurant);
+    char* src = RestaurantLogName(restaurant);
     restaurant->state = OPEN;
-    dst = RestaurantLogName(restaurant);
+    char* dst = RestaurantLogName(restaurant);
+    char srcaddr[BUF_NAME], dstaddr[BUF_NAME];
+    sprintf(srcaddr, "%s%s%s", LOG_FOLDER_ADD, src, LOG_EXT);
+    sprintf(dstaddr, "%s%s%s", LOG_OVER_ADD, dst, LOG_EXT);
+
     rename(src, dst);
-    remove(src);
     logInfo("Restaurant opened.", RestaurantLogName(restaurant));
+
+    char msg[BUF_MSG] = {STRING_END};
+    sprintf(msg, "Restaurant %s opened on port %d.", restaurant->name, restaurant->tcpPort);
+    broadcast(restaurant, msg);
 }
 
 void closeRestaurant(Restaurant* restaurant) {
@@ -130,14 +134,16 @@ void closeRestaurant(Restaurant* restaurant) {
     char* src = RestaurantLogName(restaurant);
     restaurant->state = CLOSED;
     char* dst = RestaurantLogName(restaurant);
-    
     char srcaddr[BUF_NAME], dstaddr[BUF_NAME];
     sprintf(srcaddr, "%s%s%s", LOG_FOLDER_ADD, src, LOG_EXT);
     sprintf(dstaddr, "%s%s%s", LOG_OVER_ADD, dst, LOG_EXT);
 
     rename(srcaddr, dstaddr);
-
     logInfo("Restaurant closed.", RestaurantLogName(restaurant));
+
+    char msg[BUF_MSG] = {STRING_END};
+    sprintf(msg, "Restaurant %s closed on port %d.", restaurant->name, restaurant->tcpPort);
+    broadcast(restaurant, msg);
 }
 
 void printIngredients(const Restaurant* restaurant) {
@@ -180,9 +186,7 @@ void printHandledRequests(Restaurant* restaurant) {
     logInfo("Handled requests printed.", RestaurantLogName(restaurant));
 }
 
-void printSuppliers(Restaurant* restaurant) {
-    printWithType(SUPPLIER);
-}
+void printSuppliers(Restaurant* restaurant) { printWithType(SUPPLIER); }
 
 void cli(Restaurant* restaurant, FdSet* fdset) {
     char msgBuf[BUF_MSG] = {STRING_END};
@@ -204,8 +208,8 @@ void cli(Restaurant* restaurant, FdSet* fdset) {
         printHandledRequests(restaurant);
     else if (!strcmp(msgBuf, "suppliers"))
         printSuppliers(restaurant);
-    else if (!strcmp(msgBuf, "exit")) 
-        exiting(restaurant);        
+    else if (!strcmp(msgBuf, "exit"))
+        exiting(restaurant);
     else
         logError("Invalid command.", RestaurantLogName(restaurant));
 }
@@ -218,11 +222,7 @@ void UDPHandler(Restaurant* restaurant, FdSet* fdset) {
         return;
     }
 
-    if (!strcmp(msgBuf, REG_REQ_MSG))
-        broadcast(restaurant, serializerRestaurant(restaurant, REGISTERING));
-    else {
-        // TODO
-    }
+    // we won't do anything on udp with restaurant
 }
 
 void newConnectionHandler(int fd, Restaurant* restaurant, FdSet* fdset) {

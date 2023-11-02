@@ -214,33 +214,30 @@ char* serializerRestaurant(Restaurant* restaurant, RegisteringState state) {
     return strdup(broadMsg);
 }
 
-
 void exitall(char* name) {
     logInfo("Moving log file.", name);
     char dst[BUF_MSG] = {STRING_END};
     char src[BUF_MSG] = {STRING_END};
     sprintf(src, "%s%s%s", LOG_FOLDER_ADD, name, LOG_EXT);
     sprintf(dst, "%s%s%s", LOG_OVER_ADD, name, LOG_EXT);
-    
-    if (rename(src, dst)) 
-        perror("Error moving log file");
-    
-    if (remove(src) == 0) 
-        perror("Failed to delete the file.");
+
+    if (rename(src, dst)) perror("Error moving log file");
+
+    if (remove(src) == 0) perror("Failed to delete the file.");
 
     write(STDOUT_FILENO, "Exited successfully.\n", 21);
     exit(EXIT_SUCCESS);
 }
 
 int isUniqueName(char* name) {
-    DIR *dir = opendir(LOG_FOLDER_ADD);
+    DIR* dir = opendir(LOG_FOLDER_ADD);
     if (dir == NULL) {
         perror("Unable to open directory");
         return -1;
     }
 
     int found = 0;
-    struct dirent *entry;
+    struct dirent* entry;
     while ((entry = readdir(dir)) != NULL) {
         char* namePart = strdup(entry->d_name);
         char* pos = strchr(namePart, '-');
@@ -258,9 +255,8 @@ int isUniqueName(char* name) {
     return !found;
 }
 
-
 void printWithType(int type) {
-    DIR *dir = opendir(LOG_FOLDER_ADD);
+    DIR* dir = opendir(LOG_FOLDER_ADD);
     if (dir == NULL) {
         perror("Unable to open directory");
         return;
@@ -269,7 +265,7 @@ void printWithType(int type) {
     int port, fileType;
     logLamination();
     logNormal("List of registered:", NULL);
-    struct dirent *entry;
+    struct dirent* entry;
     while ((entry = readdir(dir)) != NULL) {
         sscanf(entry->d_name, "%[^-]-%d-%d.log", name, &port, &fileType);
         if (fileType == type && strcmp(name, ".") && strcmp(name, "over")) {

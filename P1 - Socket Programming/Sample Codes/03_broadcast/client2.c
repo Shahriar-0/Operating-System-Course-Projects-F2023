@@ -1,14 +1,14 @@
-#include <unistd.h> 
-#include <sys/socket.h> 
-#include <netinet/in.h> 
-#include <string.h> 
 #include <arpa/inet.h>
-#include <stdlib.h>
-#include <sys/time.h>
 #include <fcntl.h>
+#include <netinet/in.h>
 #include <signal.h>
-#include <sys/ioctl.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <unistd.h>
 
 int main(int argc, char const *argv[]) {
     int sock, broadcast = 1, opt = 1;
@@ -19,8 +19,8 @@ int main(int argc, char const *argv[]) {
     setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast));
     setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt));
 
-    bc_address.sin_family = AF_INET; 
-    bc_address.sin_port = htons(8080); 
+    bc_address.sin_family = AF_INET;
+    bc_address.sin_port = htons(8080);
     bc_address.sin_addr.s_addr = inet_addr("255.255.255.255");
 
     bind(sock, (struct sockaddr *)&bc_address, sizeof(bc_address));

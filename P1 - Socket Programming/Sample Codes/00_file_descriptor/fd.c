@@ -1,10 +1,9 @@
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/socket.h>
 #include <string.h>
-
+#include <sys/socket.h>
+#include <unistd.h>
 
 // 0 -> stdin
 // 1 -> stdout

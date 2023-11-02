@@ -1,12 +1,12 @@
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <string.h>
-#include <arpa/inet.h>
+#include <sys/socket.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 int setupServer(int port) {
     struct sockaddr_in address;
@@ -15,13 +15,13 @@ int setupServer(int port) {
 
     int opt = 1;
     setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-    
+
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(port);
 
     bind(server_fd, (struct sockaddr *)&address, sizeof(address));
-    
+
     listen(server_fd, 4);
 
     return server_fd;
@@ -31,8 +31,8 @@ int acceptClient(int server_fd) {
     int client_fd;
     struct sockaddr_in client_address;
     int address_len = sizeof(client_address);
-    
-    client_fd = accept(server_fd, (struct sockaddr *)&client_address, (socklen_t*) &address_len);
+
+    client_fd = accept(server_fd, (struct sockaddr *)&client_address, (socklen_t *)&address_len);
     printf("Client connected!\n");
 
     return client_fd;
@@ -45,7 +45,7 @@ int main(int argc, char const *argv[]) {
     server_fd = setupServer(8080);
 
     int client_count = 0;
-    
+
     while (1) {
         client_fd = acceptClient(server_fd);
         client_count++;

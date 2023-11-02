@@ -4,18 +4,12 @@
 
 char* SupplierLogName(Supplier* supplier) {
     char* name[BUF_NAME];
-    sprintf(name, "%s%s%d%s%d", supplier->name, NAME_DELIM, supplier->tcpPort, NAME_DELIM, SUPPLIER);
+    sprintf(name, "%s%s%d%s%d", supplier->name, NAME_DELIM, supplier->tcpPort, NAME_DELIM,
+            SUPPLIER);
     return strdup(name);
 }
 
-void exiting(Supplier* supplier) {
-    exitall(SupplierLogName(supplier));
-}
-
-void broadcast(Supplier* supplier, char* msg) {
-    sendto(supplier->bcast.fd, msg, strlen(msg), 0, 
-           (struct sockaddr*)&supplier->bcast.addr, sizeof(supplier->bcast.addr));
-}
+void exiting(Supplier* supplier) { exitall(SupplierLogName(supplier)); }
 
 int initBroadcastSupplier(Supplier* supplier) {
     logInfo("Initializing broadcast for supplier.", SupplierLogName(supplier));
@@ -23,7 +17,6 @@ int initBroadcastSupplier(Supplier* supplier) {
     if (bcfd < 0) return bcfd;
     supplier->bcast.fd = bcfd;
 
-    broadcast(supplier, REG_REQ_MSG);
     logInfo("Broadcast for supplier initialized.", SupplierLogName(supplier));
 }
 
@@ -43,18 +36,14 @@ void initSupplier(Supplier* supplier, char* port) {
     logInfo("Supplier initialized.", SupplierLogName(supplier));
 }
 
-
-void broadcastMe(Supplier* supplier) { broadcast(supplier, serializerSupplier(supplier, NOT_REGISTERING)); }
-
-void cli(Supplier* supplier, FdSet* fdset) { 
+void cli(Supplier* supplier, FdSet* fdset) {
     char msg[BUF_MSG] = {STRING_END};
     getInput(STDIN_FILENO, NULL, msg, BUF_MSG);
 
-    if (!strcmp(msg, "exit")) 
+    if (!strcmp(msg, "exit"))
         exiting(supplier);
-    else 
+    else
         logError("Invalid command.", SupplierLogName(supplier));
-      
 }
 
 void UDPHandler(Supplier* supplier, FdSet* fdset) {
@@ -65,11 +54,7 @@ void UDPHandler(Supplier* supplier, FdSet* fdset) {
         return;
     }
 
-    if (!strcmp(msgBuf, REG_REQ_MSG))
-        broadcast(supplier, serializerSupplier(supplier, REGISTERING));
-    else {
-        // TODO
-    }
+    // we won't do anything on udp with supplier
 }
 
 void newConnectionHandler(int fd, Supplier* supplier, FdSet* fdset) {

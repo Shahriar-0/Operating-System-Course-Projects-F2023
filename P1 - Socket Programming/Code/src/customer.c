@@ -8,13 +8,12 @@ char* NAME;
 
 char* CustomerLogName(Customer* customer) {
     char* name[BUF_NAME];
-    sprintf(name, "%s%s%d%s%d", customer->name, NAME_DELIM, customer->tcpPort, NAME_DELIM, CUSTOMER);
+    sprintf(name, "%s%s%d%s%d", customer->name, NAME_DELIM, customer->tcpPort, NAME_DELIM,
+            CUSTOMER);
     return strdup(name);
 }
 
-void exiting(Customer* customer) {
-    exitall(CustomerLogName(customer));
-}
+void exiting(Customer* customer) { exitall(CustomerLogName(customer)); }
 
 void handleTimeout(int sig) {
     perror("Timeout (90s): Disconnected from discussion.");
@@ -127,9 +126,7 @@ void printHelp(Customer* customer) {
     logLamination();
 }
 
-void printRestaurants(Customer* customer) {
-    printWithType(RESTAURANT);
-}
+void printRestaurants(Customer* customer) { printWithType(RESTAURANT); }
 
 void cli(Customer* customer, FdSet* fdset) {
     char msg[BUF_MSG] = {STRING_END};
@@ -144,7 +141,7 @@ void cli(Customer* customer, FdSet* fdset) {
         printMenuSummary(customer);
     else if (!strcmp(msg, "order"))
         orderFood(customer, msg);
-    else if (!strcmp(msg, "restaurants")) 
+    else if (!strcmp(msg, "restaurants"))
         printRestaurants(customer);
     else if (!strcmp(msg, "exit"))
         exiting(customer);
@@ -170,10 +167,6 @@ void removeRestaurant(Customer* customer, char* name) {
     }
 }
 
-void UDPHandlerChat(char* msgBuf, Customer* customer) {
-    // TODO
-}
-
 void UDPHandler(Customer* customer, FdSet* fdset) {
     char msgBuf[BUF_MSG] = {STRING_END};
     int recvCount = recvfrom(customer->bcast.fd, msgBuf, BUF_MSG, 0, NULL, NULL);
@@ -182,21 +175,10 @@ void UDPHandler(Customer* customer, FdSet* fdset) {
         return;
     }
 
-    if (!strcmp(msgBuf, REG_REQ_MSG)) broadcast(customer, serializerCustomer(customer, REGISTERING));
-
-    char* cmd = strtok(msgBuf, REQ_DELIM);
-    if (cmd != NULL) {
-        if (!strcmp(cmd, OPEN_REST_MSG)) {
-            char* name = strtok(NULL, REQ_DELIM);
-            int port = atoi(strtok(NULL, REQ_DELIM));
-            addRestaurant(customer, name, port);
-        } else if (!strcmp(cmd, CLOSE_REST_MSG)) {
-            char* name = strtok(NULL, REQ_DELIM);
-            removeRestaurant(customer, name);
-        }
-    } else {
-        UDPHandlerChat(msgBuf, customer);
-    }
+    logLamination();
+    logNormal("Broadcast message:\n", CustomerLogName(customer));
+    logNormal(msgBuf, CustomerLogName(customer));
+    logLamination();
 }
 
 void newConnectionHandler(int fd, Customer* customer, FdSet* fdset) {
@@ -238,7 +220,7 @@ void interface(Customer* customer) {
 
     FdSet fdset;
     InitFdSet(&fdset, customer->bcast.fd);
-    
+
     while (1) {
         cliPrompt();
         memset(msgBuf, STRING_END, BUF_MSG);
