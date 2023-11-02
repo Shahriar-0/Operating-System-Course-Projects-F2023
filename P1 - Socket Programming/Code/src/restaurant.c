@@ -2,8 +2,18 @@
 #include "network.h"
 #include "utils.h"
 
+char* RestaurantLogName(Restaurant* restaurant) {
+    char* name[BUF_NAME];
+    sprintf(name, "%s%s%d%s%d", restaurant->name, NAME_DELIM, restaurant->tcpPort, NAME_DELIM, RESTAURANT);
+    return strdup(name);
+}
+
+void exiting(Restaurant* restaurant) {
+    exitall(RestaurantLogName(restaurant));
+}
+
 loadMenu(Restaurant* restaurant) {
-    logInfo("Loading menu.", restaurant->name);
+    logInfo("Loading menu.", RestaurantLogName(restaurant));
     cJSON* root = loadJSON();
     if (root == NULL) return;
 
@@ -27,26 +37,26 @@ loadMenu(Restaurant* restaurant) {
     restaurant->menuSize = menuSize;
 
     cJSON_Delete(root);
-    logInfo("Menu loaded.", restaurant->name);
+    logInfo("Menu loaded.", RestaurantLogName(restaurant));
 }
 
 void printMenu(const Restaurant* restaurant) {
-    logInfo("Printing menu.", restaurant->name);
+    logInfo("Printing menu.", RestaurantLogName(restaurant));
     logLamination();
-    logNormal("Menu:\n", restaurant->name);
+    logNormal("Menu:\n", RestaurantLogName(restaurant));
     for (int i = 0; i < restaurant->menuSize; i++) {
         const Food* food = &restaurant->menu[i];
         char buf[BUF_MSG] = {STRING_END};
         sprintf(buf, "%d. %s:", i + 1, food->name);
-        logNormal(buf, restaurant->name);
+        logNormal(buf, RestaurantLogName(restaurant));
         for (int j = 0; j < food->ingredientSize; j++) {
             memset(buf, STRING_END, BUF_MSG);
             sprintf(buf, "     - %s: %d", food->ingredients[j], food->quantity[j]);
-            logNormal(buf, restaurant->name);
+            logNormal(buf, RestaurantLogName(restaurant));
         }
     }
     logLamination();
-    logInfo("Menu printed.", restaurant->name);
+    logInfo("Menu printed.", RestaurantLogName(restaurant));
 }
 
 void broadcast(Restaurant* restaurant, char* msg) {
@@ -55,81 +65,127 @@ void broadcast(Restaurant* restaurant, char* msg) {
 }
 
 int initBroadcastRestaurant(Restaurant* restaurant) {
-    logInfo("Initializing broadcast for restaurant.", restaurant->name);
+    logInfo("Initializing broadcast for restaurant.", RestaurantLogName(restaurant));
     int bcfd = initBroadcast(&restaurant->bcast.addr);
     if (bcfd < 0) return bcfd;
     restaurant->bcast.fd = bcfd;
 
     broadcast(restaurant, REG_REQ_MSG);
-    logInfo("Broadcast for restaurant initialized.", restaurant->name);
+    logInfo("Broadcast for restaurant initialized.", RestaurantLogName(restaurant));
 }
 
 void initRestaurant(Restaurant* restaurant, char* port) {
     getInput(STDIN_FILENO, "Enter restaurant name: ", restaurant->name, BUF_NAME);
-    
-    logInfo("Initializing restaurant.", restaurant->name);
-    
+
+    logInfo("Initializing restaurant.", RestaurantLogName(restaurant));
+
     initBroadcastRestaurant(restaurant);
 
     restaurant->tcpPort = atoi(port);
     initTCP(&restaurant->tcpPort);
 
-
     loadMenu(restaurant);
     restaurant->state = OPEN;
-    logInfo("Restaurant initialized.", restaurant->name);
+    logInfo("Restaurant initialized.", RestaurantLogName(restaurant));
 }
 
 void printHelp(Restaurant* restaurant) {
-    logNormal("Available commands:", restaurant->name);
-    logNormal("    menu: print menu", restaurant->name);
-    logNormal("    open: open restaurant", restaurant->name);
-    logNormal("    close: close restaurant", restaurant->name);
-    logNormal("    exit: exit program", restaurant->name);
+    logLamination();
+    logNormal("Available commands:", RestaurantLogName(restaurant));
+    logNormal("    menu: print menu", RestaurantLogName(restaurant));
+    logNormal("    open: open restaurant", RestaurantLogName(restaurant));
+    logNormal("    close: close restaurant", RestaurantLogName(restaurant));
+    logNormal("    exit: exit program", RestaurantLogName(restaurant));
+    logLamination();
 }
 
 void openRestaurant(Restaurant* restaurant) {
     if (restaurant->state == OPEN) {
-        logError("Restaurant is already open.", restaurant->name);
+        logError("Restaurant is already open.", RestaurantLogName(restaurant));
         return;
     }
     restaurant->state = OPEN;
-    logInfo("Restaurant opened.", restaurant->name);
+    logInfo("Restaurant opened.", RestaurantLogName(restaurant));
 }
 
 void closeRestaurant(Restaurant* restaurant) {
     if (restaurant->state == CLOSED) {
-        logError("Restaurant is already closed.", restaurant->name);
+        logError("Restaurant is already closed.", RestaurantLogName(restaurant));
         return;
     }
     restaurant->state = CLOSED;
-    logInfo("Restaurant closed.", restaurant->name);
+    logInfo("Restaurant closed.", RestaurantLogName(restaurant));
+}
+
+void printIngredients(const Restaurant* restaurant) {
+    logInfo("Printing ingredients.", RestaurantLogName(restaurant));
+    logLamination();
+    logNormal("Ingredients:", RestaurantLogName(restaurant));
+    for (int i = 0; i < restaurant->menuSize; i++) {
+        const Food* food = &restaurant->menu[i];
+        for (int j = 0; j < food->ingredientSize; j++) {
+            char buf[BUF_MSG] = {STRING_END};
+            sprintf(buf, "     - %s: %d", food->ingredients[j], food->quantity[j]);
+            logNormal(buf, RestaurantLogName(restaurant));
+        }
+    }
+    logLamination();
+    logInfo("Ingredients printed.", RestaurantLogName(restaurant));
+}
+
+void printFoodRequests(Restaurant* restaurant, FoodRequest foodRequests[], int foodRequestSize) {
+    logLamination();
+    logNormal("Food requests:", RestaurantLogName(restaurant));
+    for (int i = 0; i < foodRequestSize; i++) {
+        char buf[BUF_MSG] = {STRING_END};
+        sprintf(buf, "%d. Customer %s : food %s on port %d", i + 1, foodRequests[i].customerName,
+                foodRequests[i].foodName, foodRequests[i].customerPort);
+        logNormal(buf, RestaurantLogName(restaurant));
+    }
+    logLamination();
+}
+
+void printPendingRequests(Restaurant* restaurant) {
+    logInfo("Printing pending requests.", RestaurantLogName(restaurant));
+    printFoodRequests(restaurant, restaurant->pendingRequests, restaurant->pendingRequestSize);
+    logInfo("Pending requests printed.", RestaurantLogName(restaurant));
+}
+
+void printHandledRequests(Restaurant* restaurant) {
+    logInfo("Printing handled requests.", RestaurantLogName(restaurant));
+    printFoodRequests(restaurant, restaurant->handledRequests, restaurant->handledRequestsSize);
+    logInfo("Handled requests printed.", RestaurantLogName(restaurant));
 }
 
 void cli(Restaurant* restaurant, FdSet* fdset) {
     char msgBuf[BUF_MSG] = {STRING_END};
     getInput(STDIN_FILENO, NULL, msgBuf, BUF_MSG);
 
-    if (!strcmp(msgBuf, "help")) 
+    if (!strcmp(msgBuf, "help"))
         printHelp(restaurant);
-    else if (!strcmp(msgBuf, "menu")) 
+    else if (!strcmp(msgBuf, "menu"))
         printMenu(restaurant);
-    else if (!strcmp(msgBuf, "open")) 
+    else if (!strcmp(msgBuf, "open"))
         openRestaurant(restaurant);
-    else if (!strcmp(msgBuf, "close")) 
+    else if (!strcmp(msgBuf, "close"))
         closeRestaurant(restaurant);
-    else if (!strcmp(msgBuf, "exit")) {
-        logInfo("Exiting program.", restaurant->name);
-        exit(EXIT_SUCCESS);
-    } else 
-        logError("Invalid command.", restaurant->name);
+    else if (!strcmp(msgBuf, "ingredients"))
+        printIngredients(restaurant);
+    else if (!strcmp(msgBuf, "pending"))
+        printPendingRequests(restaurant);
+    else if (!strcmp(msgBuf, "handled"))
+        printHandledRequests(restaurant);
+    else if (!strcmp(msgBuf, "exit")) 
+        exiting(restaurant);        
+    else
+        logError("Invalid command.", RestaurantLogName(restaurant));
 }
 
 void UDPHandler(Restaurant* restaurant, FdSet* fdset) {
     char msgBuf[BUF_MSG] = {STRING_END};
     int recvCount = recvfrom(restaurant->bcast.fd, msgBuf, BUF_MSG, 0, NULL, NULL);
     if (recvCount == 0) {
-        logError("Error receiving broadcast.", restaurant->name);
+        logError("Error receiving broadcast.", RestaurantLogName(restaurant));
         return;
     }
 
@@ -140,7 +196,7 @@ void UDPHandler(Restaurant* restaurant, FdSet* fdset) {
         int port;
         BroadcastType type;
         deserializer(msgBuf, &name, &port, &type);
-        if (!strcmp(restaurant->name, name) && restaurant->tcpPort != port) {
+        if (!strcmp(RestaurantLogName(restaurant), name) && restaurant->tcpPort != port) {
             int fd = connectServer(port);
             send(fd, TERMINATE_MSG, strlen(TERMINATE_MSG), 0);
             return;
@@ -149,28 +205,26 @@ void UDPHandler(Restaurant* restaurant, FdSet* fdset) {
 }
 
 void newConnectionHandler(int fd, Restaurant* restaurant, FdSet* fdset) {
-    logInfo("New connection request.", restaurant->name);
+    logInfo("New connection request.", RestaurantLogName(restaurant));
     struct sockaddr_in addr;
     socklen_t addrlen = sizeof(addr);
     int newfd = accept(fd, (struct sockaddr*)&addr, &addrlen);
     if (newfd < 0) {
-        logError("Error accepting new connection.", restaurant->name);
+        logError("Error accepting new connection.", RestaurantLogName(restaurant));
         return;
     }
     FD_SETTER(newfd, fdset);
-    logInfo("New connection accepted.", restaurant->name);
+    logInfo("New connection accepted.", RestaurantLogName(restaurant));
 }
 
 void chatHandler(int fd, char* msgBuf, Restaurant* restaurant, FdSet* fdset) {
     int recvCount = recv(fd, msgBuf, BUF_MSG, 0);
     if (recvCount == 0) {
-        logInfo("Connection closed.", restaurant->name);
+        logInfo("Connection closed.", RestaurantLogName(restaurant));
         close(fd);
         FD_CLRER(fd, fdset);
         return;
     }
-
-
 }
 
 void interface(Restaurant* restaurant) {
@@ -185,7 +239,6 @@ void interface(Restaurant* restaurant) {
         fdset.working = fdset.master;
         select(fdset.max + 1, &fdset.working, NULL, NULL, NULL);
 
-    
         for (int i = 0; i <= fdset.max; ++i) {
             if (!FD_ISSET(i, &fdset.working)) continue;
 
@@ -214,6 +267,5 @@ int main(int argc, char** argv) {
     restaurant.tcpPort = atoi(argv[1]);
     initRestaurant(&restaurant, argv[1]);
 
-    
     interface(&restaurant);
 }

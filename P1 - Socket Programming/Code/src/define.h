@@ -30,6 +30,7 @@
 #define TIMEOUT         90
 #define RECIPE_ADDRESS  "../../../Assets/recipes.json"
 #define LOG_FOLDER_ADD  "../../log/"
+#define LOG_OVER_ADD    "../../log/over/"
 #define MAX_INGREDIENT  20
 #define MAX_SUPPLIER    20
 #define MAX_RESTAURANT  20
@@ -39,7 +40,7 @@
 #define MAX_LISTEN      4
 #define UDP_PORT        8080
 #define LOCAL_HOST      "127.0.0.1"
-#define STRING_END      "\0"
+#define STRING_END      '\0'
 #define BCAST_IN_DELIM  "|"
 #define BCAST_OUT_DELIM "-"
 #define REQ_IN_DELIM    "|"
@@ -50,6 +51,8 @@
 #define CLOSE_REST_MSG  "CLOSE_REST"
 #define OPEN_REST_MSG   "OPEN_REST"
 #define REQ_DELIM       ":"
+#define NAME_DELIM      "-"
+#define LOG_EXT         ".log"
 // clang-format on
 
 // types and states
@@ -83,6 +86,7 @@ typedef struct {
 } FdSet;
 
 typedef struct {
+    char customerName[BUF_NAME];
     char foodName[BUF_NAME];
     int customerPort;
 } FoodRequest;
@@ -99,7 +103,7 @@ typedef struct {
     int menuSize;
     Ingredient ingredients[MAX_INGREDIENT];
     int ingredientSize;
-    FoodRequest pendingRequest[MAX_REQUEST];
+    FoodRequest pendingRequests[MAX_REQUEST];
     int pendingRequestSize;
     FoodRequest handledRequests[MAX_REQUEST];
     int handledRequestsSize;

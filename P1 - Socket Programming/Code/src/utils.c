@@ -6,7 +6,7 @@ void cliPrompt() { write(STDOUT_FILENO, ANSI_WHT ">> " ANSI_RST, 12); }
 void errnoPrint() { perror(strerror(errno)); }
 
 void printNum(int fd, int num) {
-    char buffer[12] = {'\0'};
+    char buffer[12] = {STRING_END};
     snprintf(buffer, 12, "%d", num);
     write(fd, buffer, strlen(buffer));
 }
@@ -18,14 +18,14 @@ void getInput(int fd, const char* prompt, char* dst, size_t dstLen) {
         errnoPrint();
         exit(EXIT_FAILURE);
     }
-    dst[cread - 1] = '\0';
+    dst[cread - 1] = STRING_END;
 }
 
 int strToInt(const char* str, int* res) {
     char* end;
     long num = strtol(str, &end, 10);
 
-    if (*end != '\0') return 1;
+    if (*end != STRING_END) return 1;
     if (errno == ERANGE) return 2;
 
     *res = num;
@@ -113,7 +113,7 @@ char* read_file(const char* filename) {
         return NULL;
     }
 
-    buffer[st.st_size] = '\0';
+    buffer[st.st_size] = STRING_END;
 
     close(fd);
     return buffer;
@@ -125,7 +125,7 @@ cJSON* loadJSON() {
     cJSON* root = cJSON_Parse(json);
     if (root == NULL) {
         char* error_ptr = cJSON_GetErrorPtr();
-        char errmsg[BUF_MSG] = {'\0'};
+        char errmsg[BUF_MSG] = {STRING_END};
         sprintf(errmsg, "Error before: %s\n", error_ptr);
         perror(errmsg);
         return;
@@ -212,4 +212,22 @@ char* serializerRestaurant(Restaurant* restaurant, RegisteringState state) {
     // clang-format on
 
     return strdup(broadMsg);
+}
+
+
+void exitall(char* name) {
+    logInfo("Moving log file.", name);
+    char dst[BUF_MSG] = {STRING_END};
+    char src[BUF_MSG] = {STRING_END};
+    sprintf(src, "%s%s%s", LOG_FOLDER_ADD, name, LOG_EXT);
+    sprintf(dst, "%s%s%s", LOG_OVER_ADD, name, LOG_EXT);
+    
+    if (rename(src, dst)) 
+        perror("Error moving log file");
+    
+    if (remove(src) == 0) 
+        perror("Failed to delete the file.");
+
+    write(STDOUT_FILENO, "Exited successfully.\n", 21);
+    exit(EXIT_SUCCESS);
 }

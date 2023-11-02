@@ -3,7 +3,7 @@
 int writeToFile(const char* filename, const char* txt) {
     char fname[BUF_NAME] = {'\0'};
     sprintf(fname, "%s%s", LOG_FOLDER_ADD, filename);
-    strcat(fname, ".log");
+    strcat(fname, LOG_EXT);
 
     chmod(fname, S_IWUSR | S_IRUSR);
     int fd = open(fname, O_CREAT | O_WRONLY | O_APPEND);

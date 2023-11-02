@@ -2,23 +2,33 @@
 #include "network.h"
 #include "utils.h"
 
+char* SupplierLogName(Supplier* supplier) {
+    char* name[BUF_NAME];
+    sprintf(name, "%s%s%d%s%d", supplier->name, NAME_DELIM, supplier->tcpPort, NAME_DELIM, supplier);
+    return strdup(name);
+}
+
+void exiting(Supplier* supplier) {
+    exitall(SupplierLogName(supplier));
+}
+
 void broadcast(Supplier* supplier, char* msg) {
     sendto(supplier->bcast.fd, msg, strlen(msg), 0, 
            (struct sockaddr*)&supplier->bcast.addr, sizeof(supplier->bcast.addr));
 }
 
 int initBroadcastSupplier(Supplier* supplier) {
-    logInfo("Initializing broadcast for supplier.", supplier->name);
+    logInfo("Initializing broadcast for supplier.", SupplierLogName(supplier));
     int bcfd = initBroadcast(&supplier->bcast.addr);
     if (bcfd < 0) return bcfd;
     supplier->bcast.fd = bcfd;
 
     broadcast(supplier, REG_REQ_MSG);
-    logInfo("Broadcast for supplier initialized.", supplier->name);
+    logInfo("Broadcast for supplier initialized.", SupplierLogName(supplier));
 }
 
 void initSupplier(Supplier* supplier, char* port) {
-    logInfo("Initializing supplier.", supplier->name);
+    logInfo("Initializing supplier.", SupplierLogName(supplier));
     initBroadcastSupplier(supplier);
 
     getInput(STDIN_FILENO, "Enter your name: ", supplier->name, BUF_NAME);
@@ -26,19 +36,28 @@ void initSupplier(Supplier* supplier, char* port) {
     supplier->tcpPort = atoi(port);
     initTCP(&supplier->tcpPort);
 
-    logInfo("Supplier initialized.", supplier->name);
+    logInfo("Supplier initialized.", SupplierLogName(supplier));
 }
 
 
 void broadcastMe(Supplier* supplier) { broadcast(supplier, serializerSupplier(supplier, NOT_REGISTERING)); }
 
-void cli(Supplier* supplier, FdSet* fdset) { logError("No available commands.", supplier->name); }
+void cli(Supplier* supplier, FdSet* fdset) { 
+    char msg[BUF_MSG] = {STRING_END};
+    getInput(STDIN_FILENO, "Enter command: ", msg, BUF_MSG);
+
+    if (!strcmp(msg, "exit")) 
+        exiting(supplier);
+    else 
+        logError("Invalid command.", SupplierLogName(supplier));
+      
+}
 
 void UDPHandler(Supplier* supplier, FdSet* fdset) {
     char msgBuf[BUF_MSG] = {STRING_END};
     int recvCount = recvfrom(supplier->bcast.fd, msgBuf, BUF_MSG, 0, NULL, NULL);
     if (recvCount == 0) {
-        logError("Error receiving broadcast.", supplier->name);
+        logError("Error receiving broadcast.", SupplierLogName(supplier));
         return;
     }
 
@@ -58,22 +77,22 @@ void UDPHandler(Supplier* supplier, FdSet* fdset) {
 }
 
 void newConnectionHandler(int fd, Supplier* supplier, FdSet* fdset) {
-    logInfo("New connection request.", supplier->name);
+    logInfo("New connection request.", SupplierLogName(supplier));
     struct sockaddr_in addr;
     socklen_t addrlen = sizeof(addr);
     int newfd = accept(fd, (struct sockaddr*)&addr, &addrlen);
     if (newfd < 0) {
-        logError("Error accepting new connection.", supplier->name);
+        logError("Error accepting new connection.", SupplierLogName(supplier));
         return;
     }
     FD_SETTER(newfd, fdset);
-    logInfo("New connection accepted.", supplier->name);
+    logInfo("New connection accepted.", SupplierLogName(supplier));
 }
 
 void chatHandler(int fd, char* msgBuf, Supplier* supplier, FdSet* fdset) {
     int recvCount = recv(fd, msgBuf, BUF_MSG, 0);
     if (recvCount == 0) {
-        logInfo("Connection closed.", supplier->name);
+        logInfo("Connection closed.", SupplierLogName(supplier));
         close(fd);
         FD_CLRER(fd, fdset);
         return;
@@ -84,7 +103,7 @@ void chatHandler(int fd, char* msgBuf, Supplier* supplier, FdSet* fdset) {
     char* name = strtok(msgBuf, REQ_IN_DELIM);
 
     if (!strcmp(name, TERMINATE_MSG)) {
-        logError("Duplication in username", supplier->name);
+        logError("Duplication in username", SupplierLogName(supplier));
         exit(EXIT_FAILURE);
     }
 

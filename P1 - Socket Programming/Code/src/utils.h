@@ -40,4 +40,5 @@ int checkUnique(char* name, char names[MAX_TOTAL][BUF_NAME], int size);
 char* serializerSupplier(Supplier* supplier, RegisteringState state);
 char* serializerCustomer(Customer* customer, RegisteringState state);
 char* serializerRestaurant(Restaurant* restaurant, RegisteringState state);
+void exitall(char* name);
 #endif  // UTILS_H_INCLUDE
