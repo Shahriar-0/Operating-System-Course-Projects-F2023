@@ -84,10 +84,12 @@ typedef struct {
     fd_set working;
 } FdSet;
 
+typedef enum { ACCEPTED, REJECTED} RequestState;
 typedef struct {
     char customerName[BUF_NAME];
     char foodName[BUF_NAME];
     int customerPort;
+    RequestState state;
 } FoodRequest;
 
 typedef enum { OPEN, CLOSED } RestaurantState;
@@ -101,6 +103,7 @@ typedef struct {
     Food menu[MAX_FOOD];
     int menuSize;
     Ingredient ingredients[MAX_INGREDIENT];
+    int quantity[MAX_INGREDIENT];
     int ingredientSize;
     FoodRequest pendingRequests[MAX_REQUEST];
     int pendingRequestSize;

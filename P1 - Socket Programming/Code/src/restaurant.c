@@ -40,6 +40,92 @@ loadMenu(Restaurant* restaurant) {
     logInfo("Menu loaded.", RestaurantLogName(restaurant));
 }
 
+void addIngredient(Restaurant* restaurant, char* ingredientName, int quantity) {
+    logInfo("Adding ingredient.", RestaurantLogName(restaurant));
+    for (int i = 0; i < restaurant->ingredientSize; i++) {
+        if (!strcmp(restaurant->ingredients[i], ingredientName)) {
+            restaurant->quantity[i] += quantity;
+            logInfo("Ingredient added.", RestaurantLogName(restaurant));
+            return;
+        }
+    }
+    strncpy(restaurant->ingredients[restaurant->ingredientSize], ingredientName, BUF_NAME);
+    restaurant->quantity[restaurant->ingredientSize] = quantity;
+    restaurant->ingredientSize++;
+    logInfo("Ingredient added.", RestaurantLogName(restaurant));
+}
+
+void canServeFood(Restaurant* restaurant, FoodRequest* foodRequest) {
+    logInfo("Checking if restaurant can serve food.", RestaurantLogName(restaurant));
+    for (int i = 0; i < restaurant->menuSize; i++) {
+        Food* food = &restaurant->menu[i];
+        if (!strcmp(food->name, foodRequest->foodName)) {
+            for (int j = 0; j < food->ingredientSize; j++) {
+                char* ingredientName = food->ingredients[j];
+                int quantity = food->quantity[j];
+                for (int k = 0; k < restaurant->ingredientSize; k++) {
+                    if (!strcmp(restaurant->ingredients[k], ingredientName)) {
+                        if (restaurant->quantity[k] < quantity) {
+                            logInfo("Restaurant can't serve food.", RestaurantLogName(restaurant));
+                            return;
+                        }
+                    }
+                }
+            }
+            logInfo("Restaurant can serve food.", RestaurantLogName(restaurant));
+            return;
+        }
+    }
+    logInfo("Restaurant can't serve food.", RestaurantLogName(restaurant));
+}
+
+void serveFood(Restaurant* restaurant, FoodRequest* foodRequest) {
+    logInfo("Serving food.", RestaurantLogName(restaurant));
+    for (int i = 0; i < restaurant->menuSize; i++) {
+        Food* food = &restaurant->menu[i];
+        if (!strcmp(food->name, foodRequest->foodName)) {
+            for (int j = 0; j < food->ingredientSize; j++) {
+                char* ingredientName = food->ingredients[j];
+                int quantity = food->quantity[j];
+                for (int k = 0; k < restaurant->ingredientSize; k++) {
+                    if (!strcmp(restaurant->ingredients[k], ingredientName)) {
+                        restaurant->quantity[k] -= quantity;
+                    }
+                }
+            }
+            return;
+        }
+    }
+    logInfo("Food can't be served.", RestaurantLogName(restaurant));
+}
+
+void addPendingRequest(Restaurant* restaurant, FoodRequest* foodRequest) {
+    logInfo("Adding pending request.", RestaurantLogName(restaurant));
+    restaurant->pendingRequests[restaurant->pendingRequestSize] = *foodRequest;
+    restaurant->pendingRequestSize++;
+    logInfo("Pending request added.", RestaurantLogName(restaurant));
+}
+
+void logFood(Restaurant* restaurant, FoodRequest* foodRequest, RequestState state) {
+    logInfo("Food logged.", RestaurantLogName(restaurant));
+    for (int i = 0; i < restaurant->pendingRequestSize; i++) {
+        FoodRequest* pendingRequest = &restaurant->pendingRequests[i];
+        if (!strcmp(pendingRequest->customerName, foodRequest->customerName) &&
+            !strcmp(pendingRequest->foodName, foodRequest->foodName)) {
+            for (int j = i; j < restaurant->pendingRequestSize - 1; j++) {
+                restaurant->pendingRequests[j] = restaurant->pendingRequests[j + 1];
+            }
+            restaurant->pendingRequestSize--;
+            restaurant->handledRequests[restaurant->handledRequestsSize] = *pendingRequest;
+            restaurant->handledRequests[restaurant->handledRequestsSize].state = state;
+            restaurant->handledRequestsSize++;
+            return;
+        }
+    }
+    logError("Food can't be logged.", RestaurantLogName(restaurant));
+}
+
+
 void printMenu(const Restaurant* restaurant) {
     logInfo("Printing menu.", RestaurantLogName(restaurant));
     logLamination();

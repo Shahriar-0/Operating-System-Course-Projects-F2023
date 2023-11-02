@@ -53,7 +53,6 @@ void UDPHandler(Supplier* supplier, FdSet* fdset) {
         logError("Error receiving broadcast.", SupplierLogName(supplier));
         return;
     }
-
     // we won't do anything on udp with supplier
 }
 
@@ -79,21 +78,6 @@ void chatHandler(int fd, char* msgBuf, Supplier* supplier, FdSet* fdset) {
         return;
     }
 
-    // name|quantity:port
-    // terminate msg
-    char* name = strtok(msgBuf, REQ_IN_DELIM);
-
-    // if (!strcmp(name, TERMINATE_MSG)) {
-    //     logError("Duplication in username", SupplierLogName(supplier));
-    //     exit(EXIT_FAILURE);
-    // }
-
-    int quantity = atoi(strtok(NULL, REQ_DELIM));
-    int port = atoi(strtok(NULL, REQ_DELIM));
-
-    char msg[BUF_MSG] = {STRING_END};
-    snprintf(msg, BUF_MSG, "You have a new request for %s", name);
-    logMsg(msg, name);
 
     yesNoPromptSupplier(name, port);
 }
