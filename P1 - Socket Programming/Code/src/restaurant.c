@@ -4,7 +4,8 @@
 
 char* RestaurantLogName(Restaurant* restaurant) {
     char* name[BUF_NAME];
-    sprintf(name, "%s%s%d%s%d", restaurant->name, NAME_DELIM, restaurant->tcpPort, NAME_DELIM, RESTAURANT);
+    EXT type = (restaurant->state == OPEN)? RESTAURANT : RESTAURANT_CLOSE;
+    sprintf(name, "%s%s%d%s%d", restaurant->name, NAME_DELIM, restaurant->tcpPort, NAME_DELIM, type);
     return strdup(name);
 }
 
@@ -80,12 +81,12 @@ void initRestaurant(Restaurant* restaurant, char* port) {
         write(1, "Name already taken.\n", strlen("Name already taken.\n"));
         exit(EXIT_FAILURE);
     }
+    restaurant->tcpPort = atoi(port);
 
     logInfo("Initializing restaurant.", RestaurantLogName(restaurant));
 
     initBroadcastRestaurant(restaurant);
 
-    restaurant->tcpPort = atoi(port);
     initTCP(&restaurant->tcpPort);
 
     loadMenu(restaurant);
@@ -99,6 +100,10 @@ void printHelp(Restaurant* restaurant) {
     logNormal("    menu: print menu", RestaurantLogName(restaurant));
     logNormal("    open: open restaurant", RestaurantLogName(restaurant));
     logNormal("    close: close restaurant", RestaurantLogName(restaurant));
+    logNormal("    ingredients: print ingredients", RestaurantLogName(restaurant));
+    logNormal("    pending: print pending requests", RestaurantLogName(restaurant));
+    logNormal("    handled: print handled requests", RestaurantLogName(restaurant));
+    logNormal("    suppliers: print suppliers", RestaurantLogName(restaurant));
     logNormal("    exit: exit program", RestaurantLogName(restaurant));
     logLamination();
 }
@@ -108,7 +113,12 @@ void openRestaurant(Restaurant* restaurant) {
         logError("Restaurant is already open.", RestaurantLogName(restaurant));
         return;
     }
+    char* src, dst;
+    src = RestaurantLogName(restaurant);
     restaurant->state = OPEN;
+    dst = RestaurantLogName(restaurant);
+    rename(src, dst);
+    remove(src);
     logInfo("Restaurant opened.", RestaurantLogName(restaurant));
 }
 
@@ -117,7 +127,16 @@ void closeRestaurant(Restaurant* restaurant) {
         logError("Restaurant is already closed.", RestaurantLogName(restaurant));
         return;
     }
+    char* src = RestaurantLogName(restaurant);
     restaurant->state = CLOSED;
+    char* dst = RestaurantLogName(restaurant);
+    
+    char srcaddr[BUF_NAME], dstaddr[BUF_NAME];
+    sprintf(srcaddr, "%s%s%s", LOG_FOLDER_ADD, src, LOG_EXT);
+    sprintf(dstaddr, "%s%s%s", LOG_OVER_ADD, dst, LOG_EXT);
+
+    rename(srcaddr, dstaddr);
+
     logInfo("Restaurant closed.", RestaurantLogName(restaurant));
 }
 
@@ -161,6 +180,10 @@ void printHandledRequests(Restaurant* restaurant) {
     logInfo("Handled requests printed.", RestaurantLogName(restaurant));
 }
 
+void printSuppliers(Restaurant* restaurant) {
+    printWithType(SUPPLIER);
+}
+
 void cli(Restaurant* restaurant, FdSet* fdset) {
     char msgBuf[BUF_MSG] = {STRING_END};
     getInput(STDIN_FILENO, NULL, msgBuf, BUF_MSG);
@@ -179,6 +202,8 @@ void cli(Restaurant* restaurant, FdSet* fdset) {
         printPendingRequests(restaurant);
     else if (!strcmp(msgBuf, "handled"))
         printHandledRequests(restaurant);
+    else if (!strcmp(msgBuf, "suppliers"))
+        printSuppliers(restaurant);
     else if (!strcmp(msgBuf, "exit")) 
         exiting(restaurant);        
     else

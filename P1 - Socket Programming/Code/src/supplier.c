@@ -4,7 +4,7 @@
 
 char* SupplierLogName(Supplier* supplier) {
     char* name[BUF_NAME];
-    sprintf(name, "%s%s%d%s%d", supplier->name, NAME_DELIM, supplier->tcpPort, NAME_DELIM, supplier);
+    sprintf(name, "%s%s%d%s%d", supplier->name, NAME_DELIM, supplier->tcpPort, NAME_DELIM, SUPPLIER);
     return strdup(name);
 }
 
@@ -33,11 +33,11 @@ void initSupplier(Supplier* supplier, char* port) {
         write(1, "Name already taken.\n", strlen("Name already taken.\n"));
         exit(EXIT_FAILURE);
     }
+    supplier->tcpPort = atoi(port);
 
     logInfo("Initializing supplier.", SupplierLogName(supplier));
     initBroadcastSupplier(supplier);
 
-    supplier->tcpPort = atoi(port);
     initTCP(&supplier->tcpPort);
 
     logInfo("Supplier initialized.", SupplierLogName(supplier));

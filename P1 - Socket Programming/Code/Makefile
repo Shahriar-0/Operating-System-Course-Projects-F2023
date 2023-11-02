@@ -1,6 +1,7 @@
 PATH_SRC   	   := src
 PATH_BUILD 	   := build
 PATH_LOG   	   := log
+PATH_LOG_OVER  := $(PATH_LOG)/over
 PATH_BIN   	   := $(PATH_BUILD)/bin
 PATH_OBJ   	   := $(PATH_BUILD)/obj
 PATH_DEP   	   := $(PATH_OBJ)/__dep__
@@ -73,7 +74,7 @@ clean: clean-obj clean-dep clean-exe clean-log
 clean-obj: ; $(RMDIR) $(PATH_OBJ)/*
 clean-dep: ; $(RMDIR) $(PATH_DEP)/*
 clean-exe: ; $(RMDIR) $(PATH_BIN)/*
-clean-log: ; $(RMDIR) $(PATH_LOG)/*
+clean-log: ; $(RMDIR) $(PATH_LOG)/*log $(PATH_LOG_OVER)/*
 delete-build: ; $(RMDIR) $(PATH_BUILD)
 
 ARGS ?=

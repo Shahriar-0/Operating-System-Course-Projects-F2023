@@ -133,7 +133,7 @@ cJSON* loadJSON() {
     return root;
 }
 
-int deserializer(char* msg, char** name, int* port, BroadcastType* type) {
+int deserializer(char* msg, char** name, int* port, EXT* type) {
     char* token = strtok(msg, BCAST_IN_DELIM);
     if (token == NULL) return;
     RegisteringState state = atoi(token);
@@ -256,4 +256,29 @@ int isUniqueName(char* name) {
 
     closedir(dir);
     return !found;
+}
+
+
+void printWithType(int type) {
+    DIR *dir = opendir(LOG_FOLDER_ADD);
+    if (dir == NULL) {
+        perror("Unable to open directory");
+        return;
+    }
+    char name[20];
+    int port, fileType;
+    logLamination();
+    logNormal("List of registered:", NULL);
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        sscanf(entry->d_name, "%[^-]-%d-%d.log", name, &port, &fileType);
+        if (fileType == type && strcmp(name, ".") && strcmp(name, "over")) {
+            char out[BUF_CLI] = {STRING_END};
+            sprintf(out, "Name: %s, Port: %d", name, port);
+            logNormal(out, name);
+        }
+    }
+    logLamination();
+
+    closedir(dir);
 }

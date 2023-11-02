@@ -8,7 +8,7 @@ char* NAME;
 
 char* CustomerLogName(Customer* customer) {
     char* name[BUF_NAME];
-    sprintf(name, "%s%s%d%s%d", customer->name, NAME_DELIM, customer->tcpPort, NAME_DELIM, customer);
+    sprintf(name, "%s%s%d%s%d", customer->name, NAME_DELIM, customer->tcpPort, NAME_DELIM, CUSTOMER);
     return strdup(name);
 }
 
@@ -76,10 +76,10 @@ void initCustomer(Customer* customer, char* port) {
         write(1, "Name already taken.\n", strlen("Name already taken.\n"));
         exit(EXIT_FAILURE);
     }
+    customer->tcpPort = atoi(port);
 
     logInfo("Initializing customer.", CustomerLogName(customer));
     initBroadcastCustomer(customer);
-    customer->tcpPort = atoi(port);
     initTCP(&customer->tcpPort);
 
     loadFoodNames(customer);
@@ -119,23 +119,16 @@ void orderFood(Customer* customer, char* msg) {
 void printHelp(Customer* customer) {
     logLamination();
     logNormal("Commands:\n", CustomerLogName(customer));
-    logNormal("help: print this help.\n", CustomerLogName(customer));
-    logNormal("menu: print the menu summary.\n", CustomerLogName(customer));
-    logNormal("order: order food.\n", CustomerLogName(customer));
-    logNormal("exit: exit the program.\n", CustomerLogName(customer));
+    logNormal("    help: print this help.\n", CustomerLogName(customer));
+    logNormal("    menu: print the menu summary.\n", CustomerLogName(customer));
+    logNormal("    order: order food.\n", CustomerLogName(customer));
+    logNormal("    restaurants: print the list of restaurants.\n", CustomerLogName(customer));
+    logNormal("    exit: exit the program.\n", CustomerLogName(customer));
     logLamination();
 }
 
 void printRestaurants(Customer* customer) {
-    logLamination();
-    logNormal("Restaurants:\n", CustomerLogName(customer));
-    for (int i = 0; i < customer->restaurantSize; i++) {
-        char msg[BUF_MSG] = {STRING_END};
-        sprintf(msg, "%d. %s - %d\n", i + 1, customer->restaurants[i].name,
-                customer->restaurants[i].port);
-        logNormal(msg, CustomerLogName(customer));
-    }
-    logLamination();
+    printWithType(RESTAURANT);
 }
 
 void cli(Customer* customer, FdSet* fdset) {

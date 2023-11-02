@@ -57,7 +57,7 @@
 
 // types and states
 typedef enum { REGISTERING, NOT_REGISTERING } RegisteringState;
-typedef enum { CUSTOMER, RESTAURANT, SUPPLIER } BroadcastType;
+typedef enum { CUSTOMER, RESTAURANT, RESTAURANT_CLOSE, SUPPLIER } EXT;
 
 // Structs
 typedef char* Ingredient;
