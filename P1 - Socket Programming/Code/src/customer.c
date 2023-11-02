@@ -73,7 +73,7 @@ void printMenuSummary(const Customer* customer) {
 void initCustomer(Customer* customer, char* port) {
     getInput(STDIN_FILENO, "Enter your name: ", customer->name, BUF_NAME);
     if (!isUniqueName(customer->name)) {
-        perror("Name already taken.");
+        write(1, "Name already taken.\n", strlen("Name already taken.\n"));
         exit(EXIT_FAILURE);
     }
 
@@ -153,10 +153,9 @@ void cli(Customer* customer, FdSet* fdset) {
         orderFood(customer, msg);
     else if (!strcmp(msg, "restaurants")) 
         printRestaurants(customer);
-    else if (!strcmp(msg, "exit")) {
-        logInfo("Exiting.", CustomerLogName(customer));
-        exit(EXIT_SUCCESS);
-    } else
+    else if (!strcmp(msg, "exit"))
+        exiting(customer);
+    else
         logError("Invalid command.", CustomerLogName(customer));
 }
 

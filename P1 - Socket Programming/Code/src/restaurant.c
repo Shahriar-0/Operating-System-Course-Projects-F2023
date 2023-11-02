@@ -77,7 +77,7 @@ int initBroadcastRestaurant(Restaurant* restaurant) {
 void initRestaurant(Restaurant* restaurant, char* port) {
     getInput(STDIN_FILENO, "Enter restaurant name: ", restaurant->name, BUF_NAME);
     if (!isUniqueName(restaurant->name)) {
-        perror("Name already taken.");
+        write(1, "Name already taken.\n", strlen("Name already taken.\n"));
         exit(EXIT_FAILURE);
     }
 

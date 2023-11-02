@@ -30,7 +30,7 @@ int initBroadcastSupplier(Supplier* supplier) {
 void initSupplier(Supplier* supplier, char* port) {
     getInput(STDIN_FILENO, "Enter your name: ", supplier->name, BUF_NAME);
     if (!isUniqueName(supplier->name)) {
-        perror("Name already taken.");
+        write(1, "Name already taken.\n", strlen("Name already taken.\n"));
         exit(EXIT_FAILURE);
     }
 
@@ -48,7 +48,7 @@ void broadcastMe(Supplier* supplier) { broadcast(supplier, serializerSupplier(su
 
 void cli(Supplier* supplier, FdSet* fdset) { 
     char msg[BUF_MSG] = {STRING_END};
-    getInput(STDIN_FILENO, "Enter command: ", msg, BUF_MSG);
+    getInput(STDIN_FILENO, NULL, msg, BUF_MSG);
 
     if (!strcmp(msg, "exit")) 
         exiting(supplier);

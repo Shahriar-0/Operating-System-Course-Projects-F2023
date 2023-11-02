@@ -242,10 +242,16 @@ int isUniqueName(char* name) {
     int found = 0;
     struct dirent *entry;
     while ((entry = readdir(dir)) != NULL) {
-        if (strstr(entry->d_name, name) != NULL) {
+        char* namePart = strdup(entry->d_name);
+        char* pos = strchr(namePart, '-');
+        if (pos) *pos = '\0';  // Null-terminate the name at the first '-'.
+
+        if (strcmp(namePart, name) == 0) {
             found = 1;
+            free(namePart);
             break;
         }
+        free(namePart);
     }
 
     closedir(dir);
