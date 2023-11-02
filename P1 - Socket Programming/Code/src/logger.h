@@ -4,14 +4,17 @@
 #include "ansi_colors.h"
 #include "define.h"
 
+// Write txt to filename. Returns 1 on error, 0 on success.
+int writeToFile(const char* filename, const char* ext, const char* txt);
+
 void logLamination();
 
-void logNormal(const char* msg);
-void logInput(const char* msg);
-void logMsg(const char* msg);
-void logInfo(const char* msg);
-void logWarning(const char* msg);
-void logError(const char* msg);
+void logNormal(const char* msg, char* name);
+void logInput(const char* msg, char* name);
+void logMsg(const char* msg, char* name);
+void logInfo(const char* msg, char* name);
+void logWarning(const char* msg, char* name);
+void logError(const char* msg, char* name);
 
 void logBrightRed(const char* msg);
 void logBrightGreen(const char* msg);

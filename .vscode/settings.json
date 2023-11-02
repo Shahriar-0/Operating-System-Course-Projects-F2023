@@ -93,6 +93,7 @@
         "types.h": "c",
         "*.ipp": "c",
         "socket": "c",
-        "utils.h": "c"
+        "utils.h": "c",
+        "internet": "c"
     }
 }

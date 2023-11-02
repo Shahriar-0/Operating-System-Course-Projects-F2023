@@ -1,42 +1,65 @@
 #include "logger.h"
 
+
+int writeToFile(const char* filename, const char* txt) {
+    char fname[BUF_NAME + 10] = {'\0'};
+    // strcpy(fname, filename);
+    sprintf(fname, "%s%s", LOG_FOLDER_ADD, filename);
+    char* ext = ".txt";
+    if (ext != NULL) strcat(fname, ext);
+
+    chmod(fname, S_IWUSR | S_IRUSR);
+    int fd = open(fname, O_CREAT | O_WRONLY | O_APPEND);
+    if (fd < 0) return 1;
+
+    if (write(fd, txt, strlen(txt)) < 0) return 1;
+    close(fd);
+    return 0;
+}
+
 void logLamination() {
     write(STDOUT_FILENO, LAMINATION, LAMLEN);
     write(STDOUT_FILENO, "\n", 1);
 }
 
-void logNormal(const char* msg) {
+void logNormal(const char* msg, char* name) {
     write(STDOUT_FILENO, msg, strlen(msg));
     write(STDOUT_FILENO, "\n", 1);
+    writeToFile(name, msg);
 }
 
-void logInput(const char* msg) {
+void logInput(const char* msg, char* name) {
     write(STDOUT_FILENO, ANSI_GRN "[Input] " ANSI_RST, 8 + ANSI_LEN);
     write(STDOUT_FILENO, msg, strlen(msg));
+    writeToFile(name, msg);
 }
 
-void logMsg(const char* msg) {
+void logMsg(const char* msg, char* name) {
     write(STDOUT_FILENO, ANSI_MAG "[Message] " ANSI_RST, 10 + ANSI_LEN);
     write(STDOUT_FILENO, msg, strlen(msg));
     write(STDERR_FILENO, "\n", 1);
+    writeToFile(name, msg);
 }
 
-void logInfo(const char* msg) {
+void logInfo(const char* msg, char* name) {
     write(STDOUT_FILENO, ANSI_BLU "[Info] " ANSI_RST, 7 + ANSI_LEN);
     write(STDOUT_FILENO, msg, strlen(msg));
     write(STDOUT_FILENO, "\n", 1);
+    writeToFile(name, msg);
 }
 
-void logWarning(const char* msg) {
+void logWarning(const char* msg, char* name) {
     write(STDOUT_FILENO, ANSI_YEL "[Warning] " ANSI_RST, 10 + ANSI_LEN);
     write(STDOUT_FILENO, msg, strlen(msg));
     write(STDOUT_FILENO, "\n", 1);
+    writeToFile(name, msg);
 }
 
-void logError(const char* msg) {
+void logError(const char* msg, char* name) {
     write(STDERR_FILENO, ANSI_RED "[Error] " ANSI_RST, 8 + ANSI_LEN);
     write(STDERR_FILENO, msg, strlen(msg));
     write(STDERR_FILENO, "\n", 1);
+    writeToFile(name, msg);
 }
 
 void logBrightRed(const char* msg) {

@@ -29,6 +29,7 @@
 #define BCAST_IP        "255.255.255.255"
 #define TIMEOUT         90
 #define RECIPE_ADDRESS  "../../../Assets/recipes.json"
+#define LOG_FOLDER_ADD  "../../log/"
 #define MAX_INGREDIENT  20
 #define MAX_SUPPLIER    20
 #define MAX_RESTAURANT  20

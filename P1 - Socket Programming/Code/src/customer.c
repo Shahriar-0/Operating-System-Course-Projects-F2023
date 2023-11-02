@@ -17,17 +17,17 @@ void broadcast(Customer* customer, char* msg) {
 }
 
 int initBroadcastCustomer(Customer* customer) {
-    logInfo("Initializing broadcast for customer.");
+    logInfo("Initializing broadcast for customer.", customer->name);
     int bcfd = initBroadcast(&customer->bcast.addr);
     if (bcfd < 0) return bcfd;
     customer->bcast.fd = bcfd;
 
     broadcast(customer, REG_REQ_MSG);
-    logInfo("Broadcast for customer initialized.");
+    logInfo("Broadcast for customer initialized.", customer->name);
 }
 
 void loadFoodNames(Customer* customer) {
-    logInfo("Loading food names.");
+    logInfo("Loading food names.", customer->name);
     cJSON* root = loadJSON();
     if (root == NULL) return;
 
@@ -42,25 +42,25 @@ void loadFoodNames(Customer* customer) {
     }
 
     cJSON_Delete(root);
-    logInfo("Food names loaded.");
+    logInfo("Food names loaded.", customer->name);
 }
 
 void printMenuSummary(const Customer* customer) {
-    logInfo("Printing menu summary.");
+    logInfo("Printing menu summary.", customer->name);
     logLamination();
-    logNormal("Menu:\n");
+    logNormal("Menu:\n", customer->name);
     char Food[BUF_MSG] = {'\0'};
     for (int i = 0; i < customer->foodSize; i++) {
         memset(Food, STRING_END, BUF_MSG);
         sprintf(Food, "%d. %s", i + 1, customer->foods[i]);
-        logNormal(Food);
+        logNormal(Food, customer->name);
     }
     logLamination();
-    logInfo("Menu summary printed.");
+    logInfo("Menu summary printed.", customer->name);
 }
 
 void initCustomer(Customer* customer, char* port) {
-    logInfo("Initializing customer.");
+    logInfo("Initializing customer.", customer->name);
     initBroadcastCustomer(customer);
 
     customer->tcpPort = atoi(port);
@@ -72,7 +72,7 @@ void initCustomer(Customer* customer, char* port) {
 
     customer->restaurantSize = 0;
 
-    logInfo("Customer initialized.");
+    logInfo("Customer initialized.", customer->name);
 }
 
 char* generateFoodRequest(Customer* customer, char* foodName) {
@@ -99,27 +99,27 @@ void orderFood(Customer* customer, char* msg) {
     char* req = generateFoodRequest(customer, food);
     send(fd, req, strlen(req), 0);
 
-    logInfo("Order sent.");
+    logInfo("Order sent.", customer->name);
 }
 
-void printHelp() {
+void printHelp(Customer* customer) {
     logLamination();
-    logNormal("Commands:\n");
-    logNormal("help: print this help.\n");
-    logNormal("menu: print the menu summary.\n");
-    logNormal("order: order food.\n");
-    logNormal("exit: exit the program.\n");
+    logNormal("Commands:\n", customer->name);
+    logNormal("help: print this help.\n", customer->name);
+    logNormal("menu: print the menu summary.\n", customer->name);
+    logNormal("order: order food.\n", customer->name);
+    logNormal("exit: exit the program.\n", customer->name);
     logLamination();
 }
 
 void printRestaurants(Customer* customer) {
     logLamination();
-    logNormal("Restaurants:\n");
+    logNormal("Restaurants:\n", customer->name);
     for (int i = 0; i < customer->restaurantSize; i++) {
         char msg[BUF_MSG] = {STRING_END};
         sprintf(msg, "%d. %s - %d\n", i + 1, customer->restaurants[i].name,
                 customer->restaurants[i].port);
-        logNormal(msg);
+        logNormal(msg, customer->name);
     }
     logLamination();
 }
@@ -130,7 +130,7 @@ void cli(Customer* customer, FdSet* fdset) {
     getInput(STDIN_FILENO, "Enter command: ", msg, BUF_MSG);
 
     if (!strcmp(msg, "help"))
-        printHelp();
+        printHelp(customer);
     else if (!strcmp(msg, "menu"))
         printMenuSummary(customer);
     else if (!strcmp(msg, "order"))
@@ -138,10 +138,10 @@ void cli(Customer* customer, FdSet* fdset) {
     else if (!strcmp(msg, "restaurants")) 
         printRestaurants(customer);
     else if (!strcmp(msg, "exit")) {
-        logInfo("Exiting.");
+        logInfo("Exiting.", customer->name);
         exit(EXIT_SUCCESS);
     } else
-        logError("Invalid command.");
+        logError("Invalid command.", customer->name);
 }
 
 void addRestaurant(Customer* customer, char* name, int port) {
@@ -179,7 +179,7 @@ void UDPHandler(Customer* customer, FdSet* fdset) {
     char msgBuf[BUF_MSG] = {STRING_END};
     int recvCount = recvfrom(customer->bcast.fd, msgBuf, BUF_MSG, 0, NULL, NULL);
     if (recvCount == 0) {
-        logError("Error receiving broadcast.");
+        logError("Error receiving broadcast.", customer->name);
         return;
     }
 
@@ -200,23 +200,23 @@ void UDPHandler(Customer* customer, FdSet* fdset) {
     }
 }
 
-void newConnectionHandler(int fd, Supplier* supplier, FdSet* fdset) {
-    logInfo("New connection request.");
+void newConnectionHandler(int fd, Customer* customer, FdSet* fdset) {
+    logInfo("New connection request.", customer->name);
     struct sockaddr_in addr;
     socklen_t addrlen = sizeof(addr);
     int newfd = accept(fd, (struct sockaddr*)&addr, &addrlen);
     if (newfd < 0) {
-        logError("Error accepting new connection.");
+        logError("Error accepting new connection.", customer->name);
         return;
     }
     FD_SETTER(newfd, fdset);
-    logInfo("New connection accepted.");
+    logInfo("New connection accepted.", customer->name);
 }
 
 void chatHandler(int fd, char* msgBuf, Customer* customer, FdSet* fdset) {
     int recvCount = recv(fd, msgBuf, BUF_MSG, 0);
     if (recvCount == 0) {
-        logInfo("Connection closed.");
+        logInfo("Connection closed.", customer->name);
         close(fd);
         FD_CLRER(fd, fdset);
         return;
@@ -225,12 +225,12 @@ void chatHandler(int fd, char* msgBuf, Customer* customer, FdSet* fdset) {
     char* cmd = strtok(msgBuf, REQ_DELIM);
     if (cmd != NULL) {
         if (!strcmp(cmd, TERMINATE_MSG)) {
-            logInfo("Duplication in username.");
+            logInfo("Duplication in username.", customer->name);
             close(fd);
             FD_CLRER(fd, fdset);
         }
     } else {
-        logNormal(msgBuf);
+        logNormal(msgBuf, customer->name);
     }
 }
 

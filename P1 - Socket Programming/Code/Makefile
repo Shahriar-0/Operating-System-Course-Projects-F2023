@@ -25,7 +25,7 @@ FILES_OBJ = $(patsubst %, $(PATH_OBJ)/%.o, $(basename $(FILES_NOMAIN)))
 
 #----------------------------------------
 
-all: $(PATH_BIN)/$(OUT_EXE_CUSTOMER) $(PATH_BIN)/$(OUT_EXE_RESTAURANT)
+all: $(PATH_BIN)/$(OUT_EXE_CUSTOMER) $(PATH_BIN)/$(OUT_EXE_RESTAURANT) $(PATH_BIN)/$(OUT_EXE_SUPPLIER)
 
 $(PATH_BIN)/$(OUT_EXE_CUSTOMER): $(PATH_OBJ)/customer.o $(FILES_OBJ)
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) $(OPTIONAL_FLAGS) -o $@

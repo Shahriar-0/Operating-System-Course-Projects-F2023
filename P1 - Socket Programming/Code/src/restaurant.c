@@ -3,7 +3,7 @@
 #include "utils.h"
 
 loadMenu(Restaurant* restaurant) {
-    logInfo("Loading menu.");
+    logInfo("Loading menu.", restaurant->name);
     cJSON* root = loadJSON();
     if (root == NULL) return;
 
@@ -27,36 +27,36 @@ loadMenu(Restaurant* restaurant) {
     restaurant->menuSize = menuSize;
 
     cJSON_Delete(root);
-    logInfo("Menu loaded.");
+    logInfo("Menu loaded.", restaurant->name);
 }
 
 void printMenu(const Restaurant* restaurant) {
-    logInfo("Printing menu.");
+    logInfo("Printing menu.", restaurant->name);
     logLamination();
-    logNormal("Menu:\n");
+    logNormal("Menu:\n", restaurant->name);
     for (int i = 0; i < restaurant->menuSize; i++) {
         const Food* food = &restaurant->menu[i];
         char buf[BUF_MSG] = {STRING_END};
         sprintf(buf, "%d. %s:", i + 1, food->name);
-        logNormal(buf);
+        logNormal(buf, restaurant->name);
         for (int j = 0; j < food->ingredientSize; j++) {
             memset(buf, STRING_END, BUF_MSG);
             sprintf(buf, "     - %s: %d", food->ingredients[j], food->quantity[j]);
-            logNormal(buf);
+            logNormal(buf, restaurant->name);
         }
     }
     logLamination();
-    logInfo("Menu printed.");
+    logInfo("Menu printed.", restaurant->name);
 }
 
 int initBroadcastRestaurant(Restaurant* restaurant) {
-    logInfo("Initializing broadcast for restaurant.");
+    logInfo("Initializing broadcast for restaurant.", restaurant->name);
     // TODO: complete this
-    logInfo("Broadcast for restaurant initialized.");
+    logInfo("Broadcast for restaurant initialized.", restaurant->name);
 }
 
 void initRestaurant(Restaurant* restaurant, char* port) {
-    logInfo("Initializing restaurant.");
+    logInfo("Initializing restaurant.", restaurant->name);
     initBroadcastRestaurant(restaurant);
 
     restaurant->tcpPort = atoi(port);
@@ -64,12 +64,12 @@ void initRestaurant(Restaurant* restaurant, char* port) {
 
     loadMenu(restaurant);
     restaurant->state = OPEN;
-    logInfo("Restaurant initialized.");
+    logInfo("Restaurant initialized.", restaurant->name);
 }
 
 int main(int argc, char** argv) {
     if (argc != 2) {
-        logError("Usage: ./supplier <port>");
+        perror("Usage: ./supplier <port>");
         exit(EXIT_FAILURE);
     }
 

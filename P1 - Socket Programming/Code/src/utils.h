@@ -12,8 +12,7 @@ void yesNoPromptSupplier(char* name, unsigned short port);
 // Print errno text representation to the standard error output.
 void errnoPrint();
 
-// Write txt to filename. Returns 1 on error, 0 on success.
-int writeToFile(const char* filename, const char* ext, const char* txt);
+
 
 // Print a number to file descriptor fd
 void printNum(int fd, int num);
