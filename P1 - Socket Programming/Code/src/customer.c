@@ -26,6 +26,7 @@ void handleTimeout(int sig) {
     perror("Timeout (90s): Disconnected from discussion.");
     timedOut = 1;
     close(chatSocket);
+    consoleUnlock();
 }
 
 void broadcast(Customer* customer, char* msg) {
@@ -107,6 +108,7 @@ void orderFood(Customer* customer) {
     char msg[BUF_MSG] = {STRING_END};
     sprintf(msg, "%s-%d:%s:%s", REQUEST_MSG, customer->tcpPort, customer->name, food);
     alarm(TIMEOUT);
+    consoleLock();
     send(serverFd, msg, strlen(msg), 0);
     logInfo("Order sent.", CustomerLogName(customer));
 }
@@ -177,6 +179,7 @@ void chatHandler(int fd, Customer* customer, FdSet* fdset) {
         FD_CLRER(fd, fdset);
         return;
     }
+    consoleUnlock();
 
     if (!strcmp(msgBuf, ACCEPTED_MSG)) {
         alarm(0);
