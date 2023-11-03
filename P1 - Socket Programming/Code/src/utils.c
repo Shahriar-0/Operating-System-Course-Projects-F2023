@@ -5,12 +5,6 @@ void cliPrompt() { write(STDOUT_FILENO, ANSI_WHT ">> " ANSI_RST, 12); }
 
 void errnoPrint() { perror(strerror(errno)); }
 
-void printNum(int fd, int num) {
-    char buffer[12] = {STRING_END};
-    snprintf(buffer, 12, "%d", num);
-    write(fd, buffer, strlen(buffer));
-}
-
 void getInput(int fd, const char* prompt, char* dst, size_t dstLen) {
     if (prompt != NULL) logInput(prompt);
     int cread = read(fd, dst, dstLen);
@@ -20,48 +14,6 @@ void getInput(int fd, const char* prompt, char* dst, size_t dstLen) {
     }
     dst[cread - 1] = STRING_END;
 }
-
-int strToInt(const char* str, int* res) {
-    char* end;
-    long num = strtol(str, &end, 10);
-
-    if (*end != STRING_END) return 1;
-    if (errno == ERANGE) return 2;
-
-    *res = num;
-    return 0;
-}
-
-int strToPort(const char* str, unsigned short* res) {
-    int num;
-    int ret = strToInt(str, &num);
-
-    if (ret != 0) return ret;
-    if (num < 0 || num > USHRT_MAX) return 2;
-
-    *res = (unsigned short)num;
-    return 0;
-}
-
-unsigned short strToPortErr(const char* str) {
-    unsigned short port;
-    int res = strToPort(str, &port);
-    if (res == 1) {
-        perror("Port should be a number.");
-        exit(EXIT_FAILURE);
-    } else if (res == 2) {
-        perror("Port number (16-bit) out of range.");
-        exit(EXIT_FAILURE);
-    }
-    return port;
-}
-
-int checkUnique(char* name, char names[MAX_TOTAL][BUF_NAME], int size) {
-    for (int i = 0; i < size; i++)
-        if (!strcmp(name, names[i])) return 0;
-    return 1;
-}
-
 ////////////////////// FdSet //////////////////////
 void FD_SETTER(int socket, FdSet* fdset) {
     FD_SET(socket, &fdset->master);

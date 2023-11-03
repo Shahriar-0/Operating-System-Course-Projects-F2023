@@ -49,6 +49,7 @@
 #define ACCEPTED_MSG    "ACCEPTED"
 #define CLOSE_REST_MSG  "CLOSE_REST"
 #define OPEN_REST_MSG   "OPEN_REST"
+#define REQUEST_MSG     "REQUEST"
 #define REQ_DELIM       ":"
 #define REQ_IN_DELIM    "-"
 #define NAME_DELIM      "-"
@@ -74,10 +75,6 @@ typedef struct {
     struct sockaddr_in addr;
 } BroadcastInfo;
 
-typedef struct {
-    char name[BUF_NAME];
-    unsigned short port;
-} BroadcastData;
 
 typedef struct {
     int max;
@@ -85,7 +82,7 @@ typedef struct {
     fd_set working;
 } FdSet;
 
-typedef enum { ACCEPTED, REJECTED} RequestState;
+typedef enum { ACCEPTED, REJECTED } RequestState;
 typedef struct {
     char customerName[BUF_NAME];
     char foodName[BUF_NAME];
@@ -100,15 +97,12 @@ typedef struct {
     int tcpFd;
     RestaurantState state;
     BroadcastInfo bcast;
-    BroadcastData suppliers[MAX_SUPPLIER];
     int supplierSize;
     Food menu[MAX_FOOD];
     int menuSize;
     Ingredient ingredients[MAX_INGREDIENT];
     int quantity[MAX_INGREDIENT];
     int ingredientSize;
-    FoodRequest pendingRequests[MAX_REQUEST];
-    int pendingRequestSize;
     FoodRequest handledRequests[MAX_REQUEST];
     int handledRequestsSize;
 } Restaurant;
@@ -120,7 +114,6 @@ typedef struct {
     BroadcastInfo bcast;
     char* foods[MAX_FOOD];
     int foodSize;
-    BroadcastData restaurants[MAX_RESTAURANT];
     int restaurantSize;
 } Customer;
 

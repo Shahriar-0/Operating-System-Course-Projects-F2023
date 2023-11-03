@@ -71,7 +71,7 @@ void addIngredient(Restaurant* restaurant, char* ingredientName, int quantity) {
     logInfo("Ingredient added.", RestaurantLogName(restaurant));
 }
 
-void canServeFood(Restaurant* restaurant, FoodRequest* foodRequest) {
+int canServeFood(Restaurant* restaurant, FoodRequest* foodRequest) {
     logInfo("Checking if restaurant can serve food.", RestaurantLogName(restaurant));
     for (int i = 0; i < restaurant->menuSize; i++) {
         Food* food = &restaurant->menu[i];
@@ -83,16 +83,17 @@ void canServeFood(Restaurant* restaurant, FoodRequest* foodRequest) {
                     if (!strcmp(restaurant->ingredients[k], ingredientName)) {
                         if (restaurant->quantity[k] < quantity) {
                             logInfo("Restaurant can't serve food.", RestaurantLogName(restaurant));
-                            return;
+                            return 0;
                         }
                     }
                 }
             }
             logInfo("Restaurant can serve food.", RestaurantLogName(restaurant));
-            return;
+            return 1;
         }
     }
     logInfo("Restaurant can't serve food.", RestaurantLogName(restaurant));
+    return 0;
 }
 
 void serveFood(Restaurant* restaurant, FoodRequest* foodRequest) {
@@ -117,28 +118,15 @@ void serveFood(Restaurant* restaurant, FoodRequest* foodRequest) {
 
 void addPendingRequest(Restaurant* restaurant, FoodRequest* foodRequest) {
     logInfo("Adding pending request.", RestaurantLogName(restaurant));
-    restaurant->pendingRequests[restaurant->pendingRequestSize] = *foodRequest;
-    restaurant->pendingRequestSize++;
     logInfo("Pending request added.", RestaurantLogName(restaurant));
 }
 
 void logFood(Restaurant* restaurant, FoodRequest* foodRequest, RequestState state) {
+    logInfo("Logging food.", RestaurantLogName(restaurant));
+    restaurant->handledRequests[restaurant->handledRequestsSize] = *foodRequest;
+    restaurant->handledRequests[restaurant->handledRequestsSize].state = state;
+    restaurant->handledRequestsSize++;
     logInfo("Food logged.", RestaurantLogName(restaurant));
-    for (int i = 0; i < restaurant->pendingRequestSize; i++) {
-        FoodRequest* pendingRequest = &restaurant->pendingRequests[i];
-        if (!strcmp(pendingRequest->customerName, foodRequest->customerName) &&
-            !strcmp(pendingRequest->foodName, foodRequest->foodName)) {
-            for (int j = i; j < restaurant->pendingRequestSize - 1; j++) {
-                restaurant->pendingRequests[j] = restaurant->pendingRequests[j + 1];
-            }
-            restaurant->pendingRequestSize--;
-            restaurant->handledRequests[restaurant->handledRequestsSize] = *pendingRequest;
-            restaurant->handledRequests[restaurant->handledRequestsSize].state = state;
-            restaurant->handledRequestsSize++;
-            return;
-        }
-    }
-    logError("Food can't be logged.", RestaurantLogName(restaurant));
 }
 
 void printMenu(const Restaurant* restaurant) {
@@ -188,8 +176,7 @@ void initRestaurant(Restaurant* restaurant, char* port) {
 
     restaurant->tcpFd = initTCP(restaurant->tcpPort);
 
-    restaurant->handledRequestsSize = restaurant->pendingRequestSize 
-              = restaurant->ingredientSize = restaurant->menuSize = 0;
+    restaurant->handledRequestsSize = restaurant->ingredientSize = restaurant->menuSize = 0;
 
     loadMenu(restaurant);
     restaurant->state = OPEN;
@@ -203,8 +190,8 @@ void printHelp(Restaurant* restaurant) {
     logNormal("    open: open restaurant", RestaurantLogName(restaurant));
     logNormal("    close: close restaurant", RestaurantLogName(restaurant));
     logNormal("    ingredients: print ingredients", RestaurantLogName(restaurant));
-    logNormal("    pending: print pending requests", RestaurantLogName(restaurant));
     logNormal("    handled: print handled requests", RestaurantLogName(restaurant));
+    logNormal("    order: order ingredient", RestaurantLogName(restaurant));
     logNormal("    suppliers: print suppliers", RestaurantLogName(restaurant));
     logNormal("    exit: exit program", RestaurantLogName(restaurant));
     logLamination();
@@ -263,31 +250,21 @@ void printIngredients(const Restaurant* restaurant) {
     logInfo("Ingredients printed.", RestaurantLogName(restaurant));
 }
 
-void printFoodRequests(Restaurant* restaurant, FoodRequest foodRequests[], int foodRequestSize) {
+void printHandledRequests(Restaurant* restaurant) {
     logLamination();
     logNormal("Food requests:", RestaurantLogName(restaurant));
-    for (int i = 0; i < foodRequestSize; i++) {
+    char debug[100]; sprintf(debug, "handledRequestsSize: %d", restaurant->handledRequestsSize); logNormal(debug, RestaurantLogName(restaurant));
+    for (int i = 0; i < restaurant->handledRequestsSize; i++) {
         char buf[BUF_MSG] = {STRING_END};
-        sprintf(buf, "%d. Customer %s : food %s on port %d", i + 1, foodRequests[i].customerName,
-                foodRequests[i].foodName, foodRequests[i].customerPort);
+        sprintf(buf, "%d. Customer : %s - food : %s -  state : %s", i + 1, restaurant->handledRequests[i].customerName,
+                restaurant->handledRequests[i].foodName,
+                (restaurant->handledRequests[i].state == ACCEPTED ? "ACCEPTED" : "REJECTED"));
         logNormal(buf, RestaurantLogName(restaurant));
     }
     logLamination();
 }
 
-void printPendingRequests(Restaurant* restaurant) {
-    logInfo("Printing pending requests.", RestaurantLogName(restaurant));
-    printFoodRequests(restaurant, restaurant->pendingRequests, restaurant->pendingRequestSize);
-    logInfo("Pending requests printed.", RestaurantLogName(restaurant));
-}
-
-void printHandledRequests(Restaurant* restaurant) {
-    logInfo("Printing handled requests.", RestaurantLogName(restaurant));
-    printFoodRequests(restaurant, restaurant->handledRequests, restaurant->handledRequestsSize);
-    logInfo("Handled requests printed.", RestaurantLogName(restaurant));
-}
-
-void printSuppliers(Restaurant* restaurant) {  printWithType(SUPPLIER); }
+void printSuppliers(Restaurant* restaurant) { printWithType(SUPPLIER); }
 
 void orderIngredient(Restaurant* restaurant) {
     char token[BUF_NAME];
@@ -304,7 +281,7 @@ void orderIngredient(Restaurant* restaurant) {
     // port:ingredient:quantity
     char msg[BUF_MSG] = {STRING_END};
     sprintf(msg, "%d%s%s%s%d", restaurant->tcpPort, REQ_DELIM, ingredientName, REQ_DELIM, quantity);
-    alarm(5);
+    alarm(TIME_OUT);
     send(serverFd, msg, strlen(msg), 0);
     logInfo("Ingredient request sent.", RestaurantLogName(restaurant));
 }
@@ -323,8 +300,6 @@ void cli(Restaurant* restaurant, FdSet* fdset) {
         closeRestaurant(restaurant);
     else if (!strcmp(msgBuf, "ingredients"))
         printIngredients(restaurant);
-    else if (!strcmp(msgBuf, "pending"))
-        printPendingRequests(restaurant);
     else if (!strcmp(msgBuf, "handled"))
         printHandledRequests(restaurant);
     else if (!strcmp(msgBuf, "suppliers"))
@@ -359,6 +334,30 @@ void newConnectionHandler(int fd, Restaurant* restaurant, FdSet* fdset) {
     logInfo("New connection accepted.", RestaurantLogName(restaurant));
 }
 
+void yesNoPrompt(unsigned short port, Restaurant* restaurant, FoodRequest* foodRequest) {
+    char msg[BUF_MSG] = {STRING_END};
+
+    char ans[BUF_MSG];
+    getInput(STDIN_FILENO, "Accept? (y/n)", ans, BUF_MSG);
+
+    int ansFd = connectServer(port);
+
+    if (!strcmp(ans, "y") && restaurant->state == OPEN && canServeFood(restaurant, foodRequest)) {
+        logInfo("Accept request", RestaurantLogName(restaurant));
+        sprintf(msg, "%s", ACCEPTED_MSG);
+        serveFood(restaurant, foodRequest);
+        send(ansFd, msg, strlen(msg), 0);
+        logFood(restaurant, foodRequest, ACCEPTED);
+    } else if (!strcmp(ans, "n")) {
+        logInfo("Reject request", RestaurantLogName(restaurant));
+        sprintf(msg, "%s", REJECTED_MSG);
+        send(ansFd, msg, strlen(msg), 0);
+        logFood(restaurant, foodRequest, REJECTED);
+    } else {
+        logError("Invalid answer.", RestaurantLogName(restaurant));
+    }
+}
+
 void chatHandler(int fd, Restaurant* restaurant, FdSet* fdset) {
     char msgBuf[BUF_MSG] = {STRING_END};
     int recvCount = recv(fd, msgBuf, BUF_MSG, 0);
@@ -368,9 +367,8 @@ void chatHandler(int fd, Restaurant* restaurant, FdSet* fdset) {
         FD_CLRER(fd, fdset);
         return;
     }
-
     char* type = strtok(msgBuf, REQ_IN_DELIM);
-    
+
     if (!strcmp(type, ACCEPTED_MSG)) {
         alarm(0);
         logMsg("Ingredient request accepted.", RestaurantLogName(restaurant));
@@ -380,32 +378,23 @@ void chatHandler(int fd, Restaurant* restaurant, FdSet* fdset) {
     } else if (!strcmp(type, REJECTED_MSG)) {
         alarm(0);
         logMsg("Ingredient request rejected.", RestaurantLogName(restaurant));
+    } else if (!strcmp(type, REQUEST_MSG)) {
+        logMsg("Food order request received.", RestaurantLogName(restaurant));
+        int customerPort = atoi(strtok(NULL, REQ_DELIM));
+        char* customerName = strtok(NULL, REQ_DELIM);
+        char* foodName = strtok(NULL, REQ_DELIM);
+        char msg[BUF_MSG] = {STRING_END};
+        sprintf(msg, "You have new request for %s from %s from port %d", foodName, customerName,
+                customerPort);
+        logMsg(msg, RestaurantLogName(restaurant));
+        FoodRequest foodRequest = {STRING_END};
+        strncpy(foodRequest.customerName, customerName, BUF_NAME);
+        strncpy(foodRequest.foodName, foodName, BUF_NAME);
+        foodRequest.customerPort = customerPort;
+        yesNoPrompt(customerPort, restaurant, &foodRequest);
+    } else {
+        logError("Invalid message received.", RestaurantLogName(restaurant));
     }
-    // else if (!strcmp(type, REQUEST_MSG)) {
-    //     logMsg("Ingredient request received.", RestaurantLogName(restaurant));
-    //     char* customerName = strtok(NULL, REQ_IN_DELIM);
-    //     char* foodName = strtok(NULL, REQ_IN_DELIM);
-    //     int customerPort = atoi(strtok(NULL, REQ_IN_DELIM));
-    //     FoodRequest foodRequest = {STRING_END};
-    //     strncpy(foodRequest.customerName, customerName, BUF_NAME);
-    //     strncpy(foodRequest.foodName, foodName, BUF_NAME);
-    //     foodRequest.customerPort = customerPort;
-    //     canServeFood(restaurant, &foodRequest);
-    //     serveFood(restaurant, &foodRequest);
-    //     addPendingRequest(restaurant, &foodRequest);
-    //     logFood(restaurant, &foodRequest, PENDING);
-    // }
-    // else if (!strcmp(type, DELIVERED_MSG)) {
-    //     logMsg("Ingredient request delivered.", RestaurantLogName(restaurant));
-    //     char* customerName = strtok(NULL, REQ_IN_DELIM);
-    //     char* foodName = strtok(NULL, REQ_IN_DELIM);
-    //     int customerPort = atoi(strtok(NULL, REQ_IN_DELIM));
-    //     FoodRequest foodRequest = {STRING_END};
-    //     strncpy(foodRequest.customerName, customerName, BUF_NAME);
-    //     strncpy(foodRequest.foodName, foodName, BUF_NAME);
-    //     foodRequest.customerPort = customerPort;
-    //     logFood(restaurant, &foodRequest, DELIVERED);
-    // }
 }
 
 void interface(Restaurant* restaurant) {
@@ -427,7 +416,6 @@ void interface(Restaurant* restaurant) {
 
             // this if is for having a clean interface when receiving messages
             if (i != STDIN_FILENO) write(STDOUT_FILENO, CLEAR_LINE_ANSI, CLEAR_LINE_LEN);
-            
 
             if (i == STDIN_FILENO)
                 cli(restaurant, &fdset);

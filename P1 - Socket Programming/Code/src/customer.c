@@ -4,13 +4,20 @@
 
 int timedOut = 0;
 int chatSocket = -1;
-char* NAME;
 
 char* CustomerLogName(Customer* customer) {
     char* name[BUF_NAME];
     sprintf(name, "%s%s%d%s%d", customer->name, NAME_DELIM, customer->tcpPort, NAME_DELIM,
             CUSTOMER);
     return strdup(name);
+}
+
+void endConnection(FdSet* fdset, Customer* customer) {
+    logWarning("Timeout (90s): Disconnected from discussion.", CustomerLogName(customer));
+    alarm(0);
+    FD_CLRER(chatSocket, fdset);
+    close(chatSocket);
+    chatSocket = -1;
 }
 
 void exiting(Customer* customer) { exitall(CustomerLogName(customer)); }
@@ -88,30 +95,19 @@ void initCustomer(Customer* customer, char* port) {
     logInfo("Customer initialized.", CustomerLogName(customer));
 }
 
-char* generateFoodRequest(Customer* customer, char* foodName) {
-    char msg[BUF_MSG] = {STRING_END};
-
-    // clang-format off
-    // foodName|customerPort
-    snprintf(msg, BUF_MSG, "%s%c%d", 
-             foodName, BCAST_IN_DELIM, 
-             customer->tcpPort);
-    // clang-format on
-
-    return strdup(msg);
-}
-
-void orderFood(Customer* customer, char* msg) {
+void orderFood(Customer* customer) {
     char food[BUF_NAME] = {STRING_END};
     getInput(STDIN_FILENO, "Enter food name: ", food, BUF_NAME);
     char portStr[BUF_CLI] = {STRING_END};
     getInput(STDIN_FILENO, "Enter restaurant port: ", portStr, BUF_CLI);
     unsigned short port = atoi(portStr);
+    int serverFd = connectServer(port);
 
-    int fd = connectServer(port);
-    char* req = generateFoodRequest(customer, food);
-    send(fd, req, strlen(req), 0);
-
+    // type-port:customer:food
+    char msg[BUF_MSG] = {STRING_END};
+    sprintf(msg, "%s-%d:%s:%s", REQUEST_MSG, customer->tcpPort, customer->name, food);
+    alarm(TIMEOUT);
+    send(serverFd, msg, strlen(msg), 0);
     logInfo("Order sent.", CustomerLogName(customer));
 }
 
@@ -138,31 +134,13 @@ void cli(Customer* customer, FdSet* fdset) {
     else if (!strcmp(msg, "menu"))
         printMenuSummary(customer);
     else if (!strcmp(msg, "order"))
-        orderFood(customer, msg);
+        orderFood(customer);
     else if (!strcmp(msg, "restaurants"))
         printRestaurants(customer);
     else if (!strcmp(msg, "exit"))
         exiting(customer);
     else
         logError("Invalid command.", CustomerLogName(customer));
-}
-
-void addRestaurant(Customer* customer, char* name, int port) {
-    strcpy(customer->restaurants[customer->restaurantSize].name, name);
-    customer->restaurants[customer->restaurantSize].port = port;
-    customer->restaurantSize++;
-}
-
-void removeRestaurant(Customer* customer, char* name) {
-    for (int i = 0; i < customer->restaurantSize; i++) {
-        if (!strcmp(customer->restaurants[i].name, name)) {
-            for (int j = i; j < customer->restaurantSize - 1; j++) {
-                customer->restaurants[j] = customer->restaurants[j + 1];
-            }
-            customer->restaurantSize--;
-            break;
-        }
-    }
 }
 
 void UDPHandler(Customer* customer, FdSet* fdset) {
@@ -200,16 +178,29 @@ void chatHandler(int fd, Customer* customer, FdSet* fdset) {
         return;
     }
 
+    if (!strcmp(msgBuf, ACCEPTED_MSG)) {
+        alarm(0);
+        logMsg("Food request accepted.", CustomerLogName(customer));
+    } else if (!strcmp(msgBuf, REJECTED_MSG)) {
+        alarm(0);
+        logMsg("Food request rejected.", CustomerLogName(customer));
+    } else 
+        logError("Invalid message received.", CustomerLogName(customer));
 }
 
 void interface(Customer* customer) {
     FdSet fdset;
-    InitFdSet(&fdset, customer->bcast.fd, customer->tcpPort);
+    InitFdSet(&fdset, customer->bcast.fd, customer->tcpFd);
 
     while (1) {
         cliPrompt();
         fdset.working = fdset.master;
         select(fdset.max + 1, &fdset.working, NULL, NULL, NULL);
+
+        if (timedOut) {
+            timedOut = 0;
+            endConnection(&fdset, customer);
+        }
 
         for (int i = 0; i <= fdset.max; ++i) {
             if (!FD_ISSET(i, &fdset.working)) continue;

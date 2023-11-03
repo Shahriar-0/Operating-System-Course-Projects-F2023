@@ -7,22 +7,8 @@
 
 // Print the prompt string.
 void cliPrompt();
-// Print a yes/no prompt to the standard output.
-void yesNoPrompt(char* name, int quantity, unsigned short port, char* supplierName);
 // Print errno text representation to the standard error output.
 void errnoPrint();
-
-// Print a number to file descriptor fd
-void printNum(int fd, int num);
-void getInput(int fd, const char* prompt, char* dst, size_t dstLen);
-
-// Return values:
-// 0: success and res is set to the result.
-// 1: str is not all numbers.
-// 2: str number is out of bounds.
-int strToInt(const char* str, int* res);
-int strToPort(const char* str, unsigned short* res);
-unsigned short strToPortErr(const char* str);
 
 // FdSet
 void InitFdSet(FdSet* fdset, int UDPfd, int TCPfd);
