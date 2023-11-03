@@ -119,11 +119,6 @@ void serveFood(Restaurant* restaurant, FoodRequest* foodRequest) {
     logInfo("Food can't be served.", RestaurantLogName(restaurant));
 }
 
-void addPendingRequest(Restaurant* restaurant, FoodRequest* foodRequest) {
-    logInfo("Adding pending request.", RestaurantLogName(restaurant));
-    logInfo("Pending request added.", RestaurantLogName(restaurant));
-}
-
 void logFood(Restaurant* restaurant, FoodRequest* foodRequest, RequestState state) {
     logInfo("Logging food.", RestaurantLogName(restaurant));
     restaurant->handledRequests[restaurant->handledRequestsSize] = *foodRequest;
