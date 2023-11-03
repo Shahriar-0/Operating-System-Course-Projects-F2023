@@ -79,20 +79,23 @@ int canServeFood(Restaurant* restaurant, FoodRequest* foodRequest) {
             for (int j = 0; j < food->ingredientSize; j++) {
                 char* ingredientName = food->ingredients[j];
                 int quantity = food->quantity[j];
+                int haveIngredient = 0;
                 for (int k = 0; k < restaurant->ingredientSize; k++) {
                     if (!strcmp(restaurant->ingredients[k], ingredientName)) {
-                        if (restaurant->quantity[k] < quantity) {
-                            logInfo("Restaurant can't serve food.", RestaurantLogName(restaurant));
-                            return 0;
-                        }
+                        if (restaurant->quantity[k] > quantity) 
+                            haveIngredient = 1;
                     }
+                }
+                if (!haveIngredient) {
+                    logError("Restaurant doesn't have enough ingredient.", RestaurantLogName(restaurant));
+                    return 0;
                 }
             }
             logInfo("Restaurant can serve food.", RestaurantLogName(restaurant));
             return 1;
         }
     }
-    logInfo("Restaurant can't serve food.", RestaurantLogName(restaurant));
+    logError("Restaurant doesn't have food.", RestaurantLogName(restaurant));
     return 0;
 }
 
@@ -132,16 +135,16 @@ void logFood(Restaurant* restaurant, FoodRequest* foodRequest, RequestState stat
 void printMenu(const Restaurant* restaurant) {
     logInfo("Printing menu.", RestaurantLogName(restaurant));
     logLamination();
-    logNormal("Menu:\n", RestaurantLogName(restaurant));
+    logNormal("Menu:\n");
     for (int i = 0; i < restaurant->menuSize; i++) {
         const Food* food = &restaurant->menu[i];
         char buf[BUF_MSG] = {STRING_END};
         sprintf(buf, "%d. %s:", i + 1, food->name);
-        logNormal(buf, RestaurantLogName(restaurant));
+        logNormal(buf);
         for (int j = 0; j < food->ingredientSize; j++) {
             memset(buf, STRING_END, BUF_MSG);
             sprintf(buf, "     - %s: %d", food->ingredients[j], food->quantity[j]);
-            logNormal(buf, RestaurantLogName(restaurant));
+            logNormal(buf);
         }
     }
     logLamination();
@@ -185,15 +188,15 @@ void initRestaurant(Restaurant* restaurant, char* port) {
 
 void printHelp(Restaurant* restaurant) {
     logLamination();
-    logNormal("Available commands:", RestaurantLogName(restaurant));
-    logNormal("    menu: print menu", RestaurantLogName(restaurant));
-    logNormal("    open: open restaurant", RestaurantLogName(restaurant));
-    logNormal("    close: close restaurant", RestaurantLogName(restaurant));
-    logNormal("    ingredients: print ingredients", RestaurantLogName(restaurant));
-    logNormal("    handled: print handled requests", RestaurantLogName(restaurant));
-    logNormal("    order: order ingredient", RestaurantLogName(restaurant));
-    logNormal("    suppliers: print suppliers", RestaurantLogName(restaurant));
-    logNormal("    exit: exit program", RestaurantLogName(restaurant));
+    logNormal("Available commands:");
+    logNormal("    menu: print menu");
+    logNormal("    open: open restaurant");
+    logNormal("    close: close restaurant");
+    logNormal("    ingredients: print ingredients");
+    logNormal("    handled: print handled requests");
+    logNormal("    order: order ingredient");
+    logNormal("    suppliers: print suppliers");
+    logNormal("    exit: exit program");
     logLamination();
 }
 
@@ -240,11 +243,11 @@ void closeRestaurant(Restaurant* restaurant) {
 void printIngredients(const Restaurant* restaurant) {
     logInfo("Printing ingredients.", RestaurantLogName(restaurant));
     logLamination();
-    logNormal("Ingredients:", RestaurantLogName(restaurant));
+    logNormal("Ingredients:");
     for (int i = 0; i < restaurant->ingredientSize; i++) {
         char buf[BUF_MSG] = {STRING_END};
         sprintf(buf, "%d. %s: %d", i + 1, restaurant->ingredients[i], restaurant->quantity[i]);
-        logNormal(buf, RestaurantLogName(restaurant));
+        logNormal(buf);
     }
     logLamination();
     logInfo("Ingredients printed.", RestaurantLogName(restaurant));
@@ -252,14 +255,13 @@ void printIngredients(const Restaurant* restaurant) {
 
 void printHandledRequests(Restaurant* restaurant) {
     logLamination();
-    logNormal("Food requests:", RestaurantLogName(restaurant));
-    char debug[100]; sprintf(debug, "handledRequestsSize: %d", restaurant->handledRequestsSize); logNormal(debug, RestaurantLogName(restaurant));
+    logNormal("Food requests:");
     for (int i = 0; i < restaurant->handledRequestsSize; i++) {
         char buf[BUF_MSG] = {STRING_END};
         sprintf(buf, "%d. Customer : %s - food : %s -  state : %s", i + 1, restaurant->handledRequests[i].customerName,
                 restaurant->handledRequests[i].foodName,
                 (restaurant->handledRequests[i].state == ACCEPTED ? "ACCEPTED" : "REJECTED"));
-        logNormal(buf, RestaurantLogName(restaurant));
+        logNormal(buf);
     }
     logLamination();
 }
@@ -342,12 +344,19 @@ void yesNoPrompt(unsigned short port, Restaurant* restaurant, FoodRequest* foodR
 
     int ansFd = connectServer(port);
 
-    if (!strcmp(ans, "y") && restaurant->state == OPEN && canServeFood(restaurant, foodRequest)) {
+    if (!strcmp(ans, "y")) {
+        if (restaurant->state == OPEN && canServeFood(restaurant, foodRequest)) {
         logInfo("Accept request", RestaurantLogName(restaurant));
-        sprintf(msg, "%s", ACCEPTED_MSG);
-        serveFood(restaurant, foodRequest);
-        send(ansFd, msg, strlen(msg), 0);
-        logFood(restaurant, foodRequest, ACCEPTED);
+            sprintf(msg, "%s", ACCEPTED_MSG);
+            serveFood(restaurant, foodRequest);
+            send(ansFd, msg, strlen(msg), 0);
+            logFood(restaurant, foodRequest, ACCEPTED);
+        } else {
+            logInfo("Reject request", RestaurantLogName(restaurant));
+            sprintf(msg, "%s", REJECTED_MSG);
+            send(ansFd, msg, strlen(msg), 0);
+            logFood(restaurant, foodRequest, REJECTED);
+        }
     } else if (!strcmp(ans, "n")) {
         logInfo("Reject request", RestaurantLogName(restaurant));
         sprintf(msg, "%s", REJECTED_MSG);

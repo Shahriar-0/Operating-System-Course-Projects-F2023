@@ -19,7 +19,7 @@ void logLamination() {
     write(STDOUT_FILENO, "\n", 1);
 }
 
-void logNormal(const char* msg, char* name) {
+void logNormal(const char* msg) {
     write(STDOUT_FILENO, msg, strlen(msg));
     write(STDOUT_FILENO, "\n", 1);
 }

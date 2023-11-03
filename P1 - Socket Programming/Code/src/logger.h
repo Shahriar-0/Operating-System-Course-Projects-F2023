@@ -9,7 +9,7 @@ int writeToFile(const char* filename, const char* txt);
 
 void logLamination();
 
-void logNormal(const char* msg, char* name);
+void logNormal(const char* msg);
 void logInput(const char* msg);
 void logMsg(const char* msg, char* name);
 void logInfo(const char* msg, char* name);

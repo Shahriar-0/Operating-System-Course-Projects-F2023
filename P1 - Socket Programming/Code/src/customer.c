@@ -64,12 +64,12 @@ void loadFoodNames(Customer* customer) {
 void printMenuSummary(const Customer* customer) {
     logInfo("Printing menu summary.", CustomerLogName(customer));
     logLamination();
-    logNormal("Menu:\n", CustomerLogName(customer));
+    logNormal("Menu:\n");
     char Food[BUF_MSG] = {'\0'};
     for (int i = 0; i < customer->foodSize; i++) {
         memset(Food, STRING_END, BUF_MSG);
         sprintf(Food, "%d. %s", i + 1, customer->foods[i]);
-        logNormal(Food, CustomerLogName(customer));
+        logNormal(Food);
     }
     logLamination();
     logInfo("Menu summary printed.", CustomerLogName(customer));
@@ -113,12 +113,12 @@ void orderFood(Customer* customer) {
 
 void printHelp(Customer* customer) {
     logLamination();
-    logNormal("Commands:\n", CustomerLogName(customer));
-    logNormal("    help: print this help.\n", CustomerLogName(customer));
-    logNormal("    menu: print the menu summary.\n", CustomerLogName(customer));
-    logNormal("    order: order food.\n", CustomerLogName(customer));
-    logNormal("    restaurants: print the list of restaurants.\n", CustomerLogName(customer));
-    logNormal("    exit: exit the program.\n", CustomerLogName(customer));
+    logNormal("Commands:\n");
+    logNormal("    help: print this help.\n");
+    logNormal("    menu: print the menu summary.\n");
+    logNormal("    order: order food.\n");
+    logNormal("    restaurants: print the list of restaurants.\n");
+    logNormal("    exit: exit the program.\n");
     logLamination();
 }
 
@@ -152,8 +152,8 @@ void UDPHandler(Customer* customer, FdSet* fdset) {
     }
 
     logLamination();
-    logNormal("Broadcast message:\n", CustomerLogName(customer));
-    logNormal(msgBuf, CustomerLogName(customer));
+    logNormal("Broadcast message:\n");
+    logNormal(msgBuf);
     logLamination();
 }
 
