@@ -16,6 +16,7 @@
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <termios.h>
 #include <unistd.h>
 
 // Constants
@@ -74,7 +75,6 @@ typedef struct {
     int fd;
     struct sockaddr_in addr;
 } BroadcastInfo;
-
 
 typedef struct {
     int max;

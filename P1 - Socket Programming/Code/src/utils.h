@@ -23,4 +23,7 @@ void exitall(char* name);
 int isUniqueName(char* name);
 void printWithType(int type);
 
+// Console
+void consoleLock();
+void consoleUnlock();
 #endif  // UTILS_H_INCLUDE

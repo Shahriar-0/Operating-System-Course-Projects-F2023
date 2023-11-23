@@ -22,8 +22,10 @@ void endConnection(FdSet* fdset, Restaurant* restaurant) {
 }
 
 void handleTimeout(int sig) {
+    perror("Timeout (90s): Disconnected from discussion.");
     timedOut = 1;
     close(chatSocket);
+    consoleUnlock();
 }
 
 void exiting(Restaurant* restaurant) { exitall(RestaurantLogName(restaurant)); }
@@ -279,6 +281,7 @@ void orderIngredient(Restaurant* restaurant) {
     char msg[BUF_MSG] = {STRING_END};
     sprintf(msg, "%d%s%s%s%d", restaurant->tcpPort, REQ_DELIM, ingredientName, REQ_DELIM, quantity);
     alarm(TIME_OUT);
+    consoleLock();
     send(serverFd, msg, strlen(msg), 0);
     logInfo("Ingredient request sent.", RestaurantLogName(restaurant));
 }
@@ -371,6 +374,7 @@ void chatHandler(int fd, Restaurant* restaurant, FdSet* fdset) {
         FD_CLRER(fd, fdset);
         return;
     }
+    consoleUnlock();
     char* type = strtok(msgBuf, REQ_IN_DELIM);
 
     if (!strcmp(type, ACCEPTED_MSG)) {
