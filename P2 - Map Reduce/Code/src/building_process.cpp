@@ -73,39 +73,39 @@ void Building::handleCMD(const std::string& cmd, const std::vector<std::string>&
     }
 }
 
-void Building::mean(std::string resourceType, std::string mNumber) {
-    std::vector<std::string> resArgs = message(MSG_REPORT_FOR_MEAN, resourceType, mNumber);
+void Building::mean(std::string rt, std::string mNumber) {
+    std::vector<std::string> resArgs = message(MSG_REPORT_FOR_MEAN, rt, mNumber);
     writefd(STDOUT_FILENO, MSG_RESPONSE, resArgs);
 }
 
-void Building::total(std::string resourceType, std::string mNumber) {
-    std::vector<std::string> resArgs = message(MSG_REPORT_FOR_TOTAL, resourceType, mNumber);
+void Building::total(std::string rt, std::string mNumber) {
+    std::vector<std::string> resArgs = message(MSG_REPORT_FOR_TOTAL, rt, mNumber);
     writefd(STDOUT_FILENO, MSG_RESPONSE, resArgs);
 }
 
-void Building::getMax(std::string resourceType, std::string mNumber) {
-    std::vector<std::string> resArgs = message(MSG_REPORT_FOR_PEAK, resourceType, mNumber);
+void Building::getMax(std::string rt, std::string mNumber) {
+    std::vector<std::string> resArgs = message(MSG_REPORT_FOR_PEAK, rt, mNumber);
     writefd(STDOUT_FILENO, MSG_RESPONSE, resArgs);
 }
 
-void Building::diff(std::string resourceType, std::string mNumber) {
-    std::vector<std::string> resArgs = message(MSG_REPORT_FOR_DIFFERENCE, resourceType, mNumber);
+void Building::diff(std::string rt, std::string mNumber) {
+    std::vector<std::string> resArgs = message(MSG_REPORT_FOR_DIFFERENCE, rt, mNumber);
     writefd(STDOUT_FILENO, MSG_RESPONSE, resArgs);
 }
 
-void Building::bill(std::string resourceType, std::string mNumber) {
+void Building::bill(std::string rt, std::string mNumber) {
     std::vector<std::string> p;
     finance_->receiveMessage(p);
-    int index = findResource(resourceType);
-    resources_[index]->sendMessage(MSG_REPORT_BILL, {mNumber, resourceType, p[0]});
+    int index = findResource(rt);
+    resources_[index]->sendMessage(MSG_REPORT_BILL, {mNumber, rt, p[0]});
     std::vector<std::string> resArgs;
     resources_[index]->receiveMessage(resArgs);
     writefd(STDOUT_FILENO, MSG_RESPONSE, resArgs);
 }
 
-std::vector<std::string> Building::message(std::string msg, std::string resourceType,
+std::vector<std::string> Building::message(std::string msg, std::string rt,
                                            std::string mNumber) {
-    int index = findResource(resourceType);
+    int index = findResource(rt);
     resources_[index]->sendMessage(msg, {mNumber});
     std::vector<std::string> resArgs;
     resources_[index]->receiveMessage(resArgs);

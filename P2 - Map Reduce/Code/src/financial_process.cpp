@@ -10,9 +10,7 @@ Financial::Financial(Logger* log, const std::string& name,
 }
 
 void Financial::connect(const std::vector<std::string>& buildingNames) {
-    for (const auto& name : buildingNames) {
-        buildings_.push_back(new Reduce(name, DEFAULT_ID));
-    }
+    for (const auto& name : buildingNames) buildings_.push_back(new Reduce(name, DEFAULT_ID));
 }
 
 void Financial::run() {
@@ -43,11 +41,10 @@ void Financial::bill(std::string buildingName, std::string resource, std::string
         {WATER, params[0]}, {GAS, params[1]}, {ELECTRICITY, params[2]}};
 
     auto it = resourceMap.find(resource);
-    if (it != resourceMap.end()) {
+    if (it != resourceMap.end()) 
         finalParam = it->second;
-    } else {
+    else 
         throw std::runtime_error("Unknown resource: " + resource);
-    }
 
     buildings_[buildingIndex]->sendMessage(MSG_REPORT_DATA, {std::to_string(finalParam)});
 }

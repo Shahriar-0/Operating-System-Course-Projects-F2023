@@ -1,14 +1,14 @@
 #ifndef RESOURCE_PROCESS_HPP_INCLUDE
 #define RESOURCE_PROCESS_HPP_INCLUDE
 
-#include "node.hpp"
-#include "reduce.hpp"
-#include "map.hpp"
 #include "console_logger.hpp"
 #include "consts.hpp"
 #include "file_console_logger.hpp"
 #include "file_logger.hpp"
 #include "logger.hpp"
+#include "map.hpp"
+#include "node.hpp"
+#include "reduce.hpp"
 #include "utils.hpp"
 
 class Resource {
@@ -22,7 +22,7 @@ private:
     void total(int m);
     void getMax(int m);
     void diff(int m);
-    void bill(int m, std::string resourceType, int p);
+    void bill(int m, std::string rt, int p);
 
     Logger* log_;
     std::string name_;

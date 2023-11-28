@@ -70,14 +70,14 @@ void Resource::diff(int m) {
     writefd(STDOUT_FILENO, MSG_RESPONSE, {std::to_string(re)});
 }
 
-void Resource::bill(int m, std::string resourceType, int p) {
+void Resource::bill(int m, std::string rt, int p) {
     int re;
 
-    if (resourceType == WATER)
+    if (rt == WATER)
         re = data_->water(m, p);
-    else if (resourceType == GAS)
+    else if (rt == GAS)
         re = data_->gas(m, p);
-    else if (resourceType == ELECTRICITY)
+    else if (rt == ELECTRICITY)
         re = data_->electricity(m, p);
     else 
         log_->error("Unknown resource type");

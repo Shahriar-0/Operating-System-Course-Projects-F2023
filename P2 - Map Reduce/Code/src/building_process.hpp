@@ -24,15 +24,14 @@ private:
     void connect();
     void handleCMD(const std::string& cmd, const std::vector<std::string>& args);
     int findResource(const std::string& name);
-    
-    void mean(std::string resourceType, std::string mNumber);
-    void total(std::string resourceType, std::string mNumber);
-    void bill(std::string resourceType, std::string mNumber);
-    void getMax(std::string resourceType, std::string mNumber);
-    void diff(std::string resourceType, std::string mNumber);
+
+    void mean(std::string rt, std::string mNumber);
+    void total(std::string rt, std::string mNumber);
+    void diff(std::string rt, std::string mNumber);
+    void bill(std::string rt, std::string mNumber);
+    void getMax(std::string rt, std::string mNumber);
     void createResource(const std::string resource);
-    std::vector<std::string> message(std::string msg, std::string resourceType,
-                                     std::string mNumber);
+    std::vector<std::string> message(std::string msg, std::string rt, std::string mNumber);
 
     Logger* log_;
     std::string name_;
