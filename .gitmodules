@@ -7,9 +7,3 @@
 [submodule "Archive/V3"]
 	path = Archive/V3
 	url = https://github.com/SamanEN/Operating-System-Course-Projects
-[submodule "Archive/V6"]
-	path = Archive/V6
-	url = https://github.com/Nesabbasi/Operating-Systems.git
-[submodule "Archive/V7"]
-	path = Archive/V7
-	url = https://github.com/Theparia/Operating-System-Course-Projects.git
