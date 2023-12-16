@@ -24,9 +24,7 @@ TimeRes::rep flip(bmp::Bmp& image, thread::Pool& pool) {
         views[i] = bmp::BmpView(image, 0, i * portion, portion, image.height());
     }
 
-    auto flipHorizontal = [](bmp::BmpView view) {
-        filter::flip(view, filter::FlipType::vertical);
-    };
+    auto flipHorizontal = [](bmp::BmpView view) { filter::flip(view, filter::FlipType::vertical); };
 
     for (unsigned i = 0; i < pool.count(); ++i) {
         pool.add(new pfilter::FilterTask(views[i], flipHorizontal));
@@ -132,10 +130,10 @@ int main(int argc, const char* argv[]) {
               << " ms\n";
     std::cout << "Flip Time: " << timeFlip << " ms\n";
     std::cout << "Purple Haze Time: " << timePurpleHaze << " ms\n";
-    std::cout << "Diagonal Time: " << timeDiagonal << " ms\n";
+    std::cout << "Diagonal Hatch Time: " << timeDiagonal << " ms\n";
     std::cout << "Gaussian Blur Time: " << timeGaussian << " ms\n";
     std::cout << "Execution Time: " << chrono::duration_cast<TimeRes>(timeEnd - timeStart).count()
-              << '\n';
+              << " ms\n";
 
     if (!image.write(OUTPUT)) {
         std::cerr << "Error writing file\n";
