@@ -201,28 +201,11 @@ void diamond(bmp::BmpView img, bmp::RGB color) {
     drawline(img, bottom, right, color);
     drawline(img, top, right, color);
     drawline(img, left, bottom, color);
-
-    // method 2:
-    // const int h = img.height();
-    // const float m = static_cast<float>(img.height()) / img.width();
-    // for (int row = 0; row < img.height(); ++row) {
-    //     for (int col = 0; col < img.width(); ++col) {
-    //         if (row == static_cast<int>(-m * col + h / 2) ||
-    //             row == static_cast<int>(-m * col + 3 * h / 2) ||
-    //             row == static_cast<int>(+m * col - h / 2) ||
-    //             row == static_cast<int>(+m * col + h / 2)) {
-    //             img(row, col) = color;
-    //         }
-    //     }
-    // }
 }
 
 void diagonalHatch(bmp::BmpView img, bmp::RGB color) {
-    int midWidth = img.width() / 2;
-    int midHeight = img.height() / 2;
     int width = img.width() - 1;
     int height = img.height() - 1;
-
     drawline(img, {0, height}, {0, width}, color);
 }
 

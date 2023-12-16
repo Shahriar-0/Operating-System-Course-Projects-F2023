@@ -10,7 +10,7 @@
 #include "pfilter.hpp"
 #include "pool.hpp"
 
-constexpr char OUTPUT[] = "output.bmp";
+constexpr char OUTPUT[] = "../../../Assets/Pictures/output_parallel.bmp";
 
 namespace chrono = std::chrono;
 using TimeRes = chrono::duration<float, std::milli>;

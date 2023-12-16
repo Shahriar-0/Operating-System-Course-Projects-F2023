@@ -5,14 +5,13 @@
 #include "bmp.hpp"
 #include "filter.hpp"
 
-constexpr char OUTPUT[] = "output.bmp";
+constexpr char OUTPUT[] = "../../../Assets/Pictures/output_serial.bmp";
 
 namespace chrono = std::chrono;
 using TimeRes = chrono::duration<float, std::milli>;
 
 TimeRes::rep flip(bmp::Bmp& image) {
     auto tstart = chrono::high_resolution_clock::now();
-    // filter::flip(image, filter::FlipType::horizontal);
     filter::flip(image, filter::FlipType::vertical);
     auto tend = chrono::high_resolution_clock::now();
     return chrono::duration_cast<TimeRes>(tend - tstart).count();
@@ -67,7 +66,7 @@ int main(int argc, const char* argv[]) {
     std::cout << "Purple Haze Time: " << timeEmboss << " ms\n";
     std::cout << "Diagonal Hatch Time: " << timeDiagonal << " ms\n";
     std::cout << "Gaussian Blur Time: " << timeGaussian << " ms\n";
-    std::cout << "Execution Time: " << chrono::duration_cast<TimeRes>(timeEnd - timeStart).count() << '\n';
+    std::cout << "Execution Time: " << chrono::duration_cast<TimeRes>(timeEnd - timeStart).count() << " ms\n";
 
     if (!image.write(OUTPUT)) {
         std::cerr << "Error writing file\n";
