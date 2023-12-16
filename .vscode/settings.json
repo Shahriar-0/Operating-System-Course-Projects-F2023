@@ -94,6 +94,9 @@
         "*.ipp": "c",
         "socket": "c",
         "utils.h": "c",
-        "internet": "c"
+        "internet": "c",
+        "strstream": "cpp",
+        "format": "cpp",
+        "stdfloat": "cpp"
     }
 }
