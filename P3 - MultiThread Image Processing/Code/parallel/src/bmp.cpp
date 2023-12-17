@@ -114,15 +114,15 @@ BMP::ReadResult BMP::read(const std::string& filename) {
     return ReadResult::success;
 }
 
-bool BMP::write(const std::string& filename) {
-    if (!valid_) return false;
+BMP::WriteResult BMP::write(const std::string& filename) {
+    if (!valid_) return WriteResult::write_err;
     dataFromVector();
 
     std::ofstream file(filename, std::ios_base::binary);
-    if (!file.is_open()) return false;
+    if (!file.is_open()) return WriteResult::open_err;
 
     file.write(data_, hdr_.fileSize);
-    return true;
+    return WriteResult::success;
 }
 
 int BMP::width() const { return infoHdr_.width; }

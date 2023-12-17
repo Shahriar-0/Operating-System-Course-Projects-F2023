@@ -54,6 +54,8 @@ public:
     BMP& operator=(BMP&& rhs) noexcept;
     friend void swap(BMP& a, BMP& b);
 
+    bool create(int width, int height);
+
     enum class ReadResult {
         success,
         open_err,
@@ -61,10 +63,14 @@ public:
         unsupported_bmp,
         alloc_err,
     };
-
-    bool create(int width, int height);
     ReadResult read(const std::string& filename);
-    bool write(const std::string& filename);
+
+    enum class WriteResult {
+        success,
+        open_err,
+        write_err,
+    };
+    WriteResult write(const std::string& filename);
 
     int width() const;
     int height() const;

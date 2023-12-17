@@ -35,24 +35,25 @@ int main(int argc, const char* argv[]) {
     }
     auto timeReadEnd = chrono::high_resolution_clock::now();
 
-    auto timeFlip = applyFilter(image, [](BMP24::BMP& img) { filter::flip(img, filter::FlipType::vertical); });
+    // clang-format off
+    auto timeFlip       = applyFilter(image, [](BMP24::BMP& img) { filter::flip(img, filter::FlipType::vertical); });
     auto timePurpleHaze = applyFilter(image, [](BMP24::BMP& img) { filter::purpleHaze(img); });
-    auto timeDiagonal = applyFilter(image, [](BMP24::BMP& img) { filter::diagonalHatch(img, BMP24::RGB(255, 255, 255)); });
-    auto timeGaussian = applyFilter(image, [](BMP24::BMP& img) { filter::guassianBlur(img); });
+    auto timeDiagonal   = applyFilter(image, [](BMP24::BMP& img) { filter::diagonalHatch(img, BMP24::RGB(255, 255, 255)); });
+    auto timeGaussian   = applyFilter(image, [](BMP24::BMP& img) { filter::guassianBlur(img); });
+    // clang-format on
 
     auto timeEnd = chrono::high_resolution_clock::now();
+    // clang-format off
+    std::cout << "Read Time: "           << chrono::duration_cast<TimeRes>(timeReadEnd - timeStart).count() << " ms\n";
+    std::cout << "Flip Time: "           << timeFlip                                                        << " ms\n";
+    std::cout << "Purple Haze Time: "    << timePurpleHaze                                                  << " ms\n";
+    std::cout << "Diagonal Hatch Time: " << timeDiagonal                                                    << " ms\n";
+    std::cout << "Gaussian Blur Time: "  << timeGaussian                                                    << " ms\n";
+    std::cout << "Execution Time: "      << chrono::duration_cast<TimeRes>(timeEnd - timeStart).count()     << " ms\n";
+    // clang-format on
 
-    std::cout << "Read Time: " << chrono::duration_cast<TimeRes>(timeReadEnd - timeStart).count()
-              << " ms\n";
-    std::cout << "Flip Time: " << timeFlip << " ms\n";
-    std::cout << "Purple Haze Time: " << timePurpleHaze << " ms\n";
-    std::cout << "Diagonal Hatch Time: " << timeDiagonal << " ms\n";
-    std::cout << "Gaussian Blur Time: " << timeGaussian << " ms\n";
-    std::cout << "Execution Time: " << chrono::duration_cast<TimeRes>(timeEnd - timeStart).count()
-              << " ms\n";
-
-    if (!image.write(OUTPUT)) {
-        std::cerr << "Error writing file\n";
+    if (image.write(OUTPUT) != BMP24::BMP::WriteResult::success) {
+        std::cerr << "Error writing file: #" << static_cast<int>(res) << '\n';
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
