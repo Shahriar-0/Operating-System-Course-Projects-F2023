@@ -7,12 +7,9 @@
 
 namespace BMP24 {
 
-RGB::RGB(uint8_t r, uint8_t g, uint8_t b)
-    : blu(b), grn(g), red(r) {}
+RGB::RGB(uint8_t r, uint8_t g, uint8_t b) : blu(b), grn(g), red(r) {}
 
-BMP::BMP(int width, int height) {
-    create(width, height);
-}
+BMP::BMP(int width, int height) { create(width, height); }
 
 BMP::BMP(BMP_View view) {
     create(view.width(), view.height());
@@ -23,9 +20,7 @@ BMP::BMP(BMP_View view) {
     }
 }
 
-BMP::~BMP() {
-    delete[] data_;
-}
+BMP::~BMP() { delete[] data_; }
 
 BMP::BMP(const BMP& other) {
     if (!other.valid_) return;
@@ -39,9 +34,7 @@ BMP::BMP(const BMP& other) {
     datavec_ = other.datavec_;
 }
 
-BMP::BMP(BMP&& other) noexcept {
-    swap(*this, other);
-}
+BMP::BMP(BMP&& other) noexcept { swap(*this, other); }
 
 BMP& BMP::operator=(const BMP& rhs) {
     BMP temp(rhs);
@@ -136,12 +129,8 @@ int BMP::width() const { return infoHdr_.width; }
 int BMP::height() const { return infoHdr_.height; }
 bool BMP::valid() const { return valid_; }
 
-RGB& BMP::operator()(int row, int col) {
-    return datavec_[row][col];
-}
-const RGB& BMP::operator()(int row, int col) const {
-    return datavec_[row][col];
-}
+RGB& BMP::operator()(int row, int col) { return datavec_[row][col]; }
+const RGB& BMP::operator()(int row, int col) const { return datavec_[row][col]; }
 
 int BMP::calcPadding(int width) {
     const int bytesInRow = width * sizeof(RGB);
@@ -156,18 +145,14 @@ RGB& BMP::getPixel(int row, int col) {
 
 class DataVectorTask : public thread::Task {
 public:
-    enum class Type {
-        dataToVector,
-        dataFromVector
-    };
+    enum class Type { dataToVector, dataFromVector };
     DataVectorTask(BMP* self, Type type, int start, int end)
         : self_(self), type_(type), start_(start), end_(end) {}
 
     void run() override {
         if (type_ == Type::dataToVector) {
             self_->dataToVectorPartial(start_, end_);
-        }
-        else {
+        } else {
             self_->dataFromVectorPartial(start_, end_);
         }
     }
@@ -214,7 +199,7 @@ void BMP::dataFromVectorPartial(int start, int end) {
     }
 }
 
-// BmpView
+// BMP_View
 
 BMP_View::BMP_View(BMP& bmp)
     : bmp_(&bmp), row_(0), col_(0), width_(bmp.width()), height_(bmp.height()) {}
@@ -234,13 +219,9 @@ BMP_View& BMP_View::operator=(BMP& other) {
 int BMP_View::width() const { return width_; }
 int BMP_View::height() const { return height_; }
 
-RGB BMP_View::operator()(int row, int col) const {
-    return (*bmp_)(row_ + row, col_ + col);
-}
+RGB BMP_View::operator()(int row, int col) const { return (*bmp_)(row_ + row, col_ + col); }
 
-RGB& BMP_View::operator()(int row, int col) {
-    return (*bmp_)(row_ + row, col_ + col);
-}
+RGB& BMP_View::operator()(int row, int col) { return (*bmp_)(row_ + row, col_ + col); }
 
 void BMP_View::replace(BMP_View subBmp, BMP_View src) {
     for (int row = 0; row < subBmp.height(); ++row) {
@@ -250,4 +231,4 @@ void BMP_View::replace(BMP_View subBmp, BMP_View src) {
     }
 }
 
-} // namespace bmp
+}  // namespace BMP24

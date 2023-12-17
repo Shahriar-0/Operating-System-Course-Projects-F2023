@@ -117,6 +117,6 @@ private:
     int height_;
 };
 
-} // namespace bmp
+}  // namespace BMP24
 
-#endif // BMP_HPP_INCLUDE
+#endif  // BMP_HPP_INCLUDE
