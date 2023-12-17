@@ -48,8 +48,8 @@ TimeRes::rep purpleHaze(BMP24::BMP& image, thread::Pool& pool) {
 TimeRes::rep diagonalHatch(BMP24::BMP& image, thread::Pool& pool) {
     auto timeStart = chrono::high_resolution_clock::now();
 
-    std::array<BMP24::BMP_View, 4> views;
-    for (int i = 0; i < 4; ++i) {
+    std::array<BMP24::BMP_View, THREAD_COUNT> views;
+    for (int i = 0; i < THREAD_COUNT; ++i) {
         auto row = (i / 2) ? image.height() / 2 : 0;
         auto col = (i % 2) ? image.width() / 2 : 0;
         views[i] = BMP24::BMP_View(image, row, col, image.width() / 2, image.height() / 2);
@@ -60,7 +60,7 @@ TimeRes::rep diagonalHatch(BMP24::BMP& image, thread::Pool& pool) {
                          filter::Point{view.width() - 1, 0}, BMP24::RGB(255, 255, 255));
     };
 
-    for (int i = 0; i < 4; ++i) pool.add(new pfilter::FilterTask(views[i], Diagonal));
+    for (int i = 0; i < THREAD_COUNT; ++i) pool.add(new pfilter::FilterTask(views[i], Diagonal));
     pool.waitForTasks();
 
     auto timeEnd = chrono::high_resolution_clock::now();

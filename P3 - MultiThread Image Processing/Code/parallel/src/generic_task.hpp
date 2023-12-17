@@ -27,28 +27,6 @@ using index_sequence_for = make_index_sequence<sizeof...(T)>;
 #endif
 }  // namespace detail
 
-template <class Function, class... Args>
-class GenericTask final : public Task {
-public:
-    GenericTask(Function&& func, Args&&... args)
-        : func_(std::forward<Function>(func)), args_(std::forward<Args>(args)...) {}
-
-    void run() override { runImpl<Args...>(detail::index_sequence_for<Args...>{}); }
-
-private:
-    Function func_;
-    std::tuple<Args...> args_;
-
-    template <size_t... Is>
-    void runImpl(detail::index_sequence<Is...>) {
-        func_(std::get<Is>(args_)...);
-    }
-};
-
-template <typename F, typename... Args>
-GenericTask<F, Args...> makeGeneric(F&& f, Args&&... args) {
-    return GenericTask<F, Args...>(std::forward<F>(f), std::forward<Args>(args)...);
-}
 template <class... Ts>
 class GenericTask final : public Task {
 public:
