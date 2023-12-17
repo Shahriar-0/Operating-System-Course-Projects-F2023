@@ -3,7 +3,7 @@
 
 #include "bmp.hpp"
 #include "filter.hpp"
-#include "threading/thread.hpp"
+#include "thread.hpp"
 
 namespace pfilter {
 
