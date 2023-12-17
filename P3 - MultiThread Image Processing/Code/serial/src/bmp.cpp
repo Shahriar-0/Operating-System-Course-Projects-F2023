@@ -3,16 +3,16 @@
 #include <algorithm>
 #include <fstream>
 
-namespace bmp {
+namespace BMP24 {
 
 RGB::RGB(uint8_t r, uint8_t g, uint8_t b)
     : blu(b), grn(g), red(r) {}
 
-Bmp::Bmp(int width, int height) {
+BMP::BMP(int width, int height) {
     create(width, height);
 }
 
-Bmp::Bmp(BmpView view) {
+BMP::BMP(BMP_View view) {
     create(view.width(), view.height());
     for (int row = 0; row < view.height(); ++row) {
         for (int col = 0; col < view.width(); ++col) {
@@ -21,11 +21,11 @@ Bmp::Bmp(BmpView view) {
     }
 }
 
-Bmp::~Bmp() {
+BMP::~BMP() {
     delete[] data_;
 }
 
-Bmp::Bmp(const Bmp& other) {
+BMP::BMP(const BMP& other) {
     if (!other.valid_) return;
     delete[] data_;
     data_ = new char[other.hdr_.fileSize];
@@ -37,22 +37,22 @@ Bmp::Bmp(const Bmp& other) {
     datavec_ = other.datavec_;
 }
 
-Bmp::Bmp(Bmp&& other) noexcept {
+BMP::BMP(BMP&& other) noexcept {
     swap(*this, other);
 }
 
-Bmp& Bmp::operator=(const Bmp& rhs) {
-    Bmp temp(rhs);
+BMP& BMP::operator=(const BMP& rhs) {
+    BMP temp(rhs);
     swap(*this, temp);
     return *this;
 }
 
-Bmp& Bmp::operator=(Bmp&& rhs) noexcept {
+BMP& BMP::operator=(BMP&& rhs) noexcept {
     swap(*this, rhs);
     return *this;
 }
 
-void swap(Bmp& a, Bmp& b) {
+void swap(BMP& a, BMP& b) {
     using std::swap;
     swap(a.data_, b.data_);
     swap(a.valid_, b.valid_);
@@ -62,7 +62,7 @@ void swap(Bmp& a, Bmp& b) {
     swap(a.datavec_, b.datavec_);
 }
 
-bool Bmp::create(int width, int height) {
+bool BMP::create(int width, int height) {
     valid_ = false;
     padding_ = calcPadding(width);
 
@@ -93,7 +93,7 @@ bool Bmp::create(int width, int height) {
     return true;
 }
 
-Bmp::ReadResult Bmp::read(const std::string& filename) {
+BMP::ReadResult BMP::read(const std::string& filename) {
     std::ifstream file(filename, std::ios_base::binary);
     if (!file.is_open()) return ReadResult::open_err;
     valid_ = false;
@@ -119,7 +119,7 @@ Bmp::ReadResult Bmp::read(const std::string& filename) {
     return ReadResult::success;
 }
 
-bool Bmp::write(const std::string& filename) {
+bool BMP::write(const std::string& filename) {
     if (!valid_) return false;
     dataFromVector();
 
@@ -130,29 +130,29 @@ bool Bmp::write(const std::string& filename) {
     return true;
 }
 
-int Bmp::width() const { return infoHdr_.width; }
-int Bmp::height() const { return infoHdr_.height; }
-bool Bmp::valid() const { return valid_; }
+int BMP::width() const { return infoHdr_.width; }
+int BMP::height() const { return infoHdr_.height; }
+bool BMP::valid() const { return valid_; }
 
-RGB& Bmp::operator()(int row, int col) {
+RGB& BMP::operator()(int row, int col) {
     return datavec_[row][col];
 }
-const RGB& Bmp::operator()(int row, int col) const {
+const RGB& BMP::operator()(int row, int col) const {
     return datavec_[row][col];
 }
 
-int Bmp::calcPadding(int width) {
+int BMP::calcPadding(int width) {
     const int bytesInRow = width * sizeof(RGB);
     return bytesInRow % 4 ? 4 - bytesInRow % 4 : 0;
 }
 
-RGB& Bmp::getPixel(int row, int col) {
+RGB& BMP::getPixel(int row, int col) {
     const int rowStart = (height() - 1 - row) * (width() * sizeof(RGB) + padding_);
     char* const pixelPos = data_ + hdr_.offset + rowStart + col * sizeof(RGB);
     return *(RGB*)pixelPos;
 }
 
-void Bmp::dataToVector() {
+void BMP::dataToVector() {
     datavec_.assign(height(), std::vector<RGB>(width()));
     for (int row = 0; row < height(); ++row) {
         for (int col = 0; col < width(); ++col) {
@@ -161,7 +161,7 @@ void Bmp::dataToVector() {
     }
 }
 
-void Bmp::dataFromVector() {
+void BMP::dataFromVector() {
     for (int row = 0; row < height(); ++row) {
         for (int col = 0; col < width(); ++col) {
             getPixel(row, col) = datavec_[row][col];
@@ -171,13 +171,13 @@ void Bmp::dataFromVector() {
 
 // BmpView
 
-BmpView::BmpView(Bmp& bmp)
+BMP_View::BMP_View(BMP& bmp)
     : bmp_(&bmp), row_(0), col_(0), width_(bmp.width()), height_(bmp.height()) {}
 
-BmpView::BmpView(Bmp& bmp, int row, int col, int width, int height)
+BMP_View::BMP_View(BMP& bmp, int row, int col, int width, int height)
     : bmp_(&bmp), row_(row), col_(col), width_(width), height_(height) {}
 
-BmpView& BmpView::operator=(Bmp& other) {
+BMP_View& BMP_View::operator=(BMP& other) {
     bmp_ = &other;
     row_ = 0;
     col_ = 0;
@@ -186,18 +186,18 @@ BmpView& BmpView::operator=(Bmp& other) {
     return *this;
 }
 
-int BmpView::width() const { return width_; }
-int BmpView::height() const { return height_; }
+int BMP_View::width() const { return width_; }
+int BMP_View::height() const { return height_; }
 
-RGB BmpView::operator()(int row, int col) const {
+RGB BMP_View::operator()(int row, int col) const {
     return (*bmp_)(row_ + row, col_ + col);
 }
 
-RGB& BmpView::operator()(int row, int col) {
+RGB& BMP_View::operator()(int row, int col) {
     return (*bmp_)(row_ + row, col_ + col);
 }
 
-void BmpView::replace(BmpView subBmp, BmpView src) {
+void BMP_View::replace(BMP_View subBmp, BMP_View src) {
     for (int row = 0; row < subBmp.height(); ++row) {
         for (int col = 0; col < subBmp.width(); ++col) {
             subBmp(row, col) = src(row, col);

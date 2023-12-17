@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace bmp {
+namespace BMP24 {
 
 #pragma pack(push, 1)
 struct Header {
@@ -40,20 +40,20 @@ struct RGB {
     uint8_t red;
 };
 
-class BmpView;
+class BMP_View;
 class DataVectorTask;
 
-class Bmp {
+class BMP {
 public:
-    Bmp() = default;
-    Bmp(int width, int height);
-    Bmp(BmpView view);
-    ~Bmp();
-    Bmp(const Bmp& other);
-    Bmp(Bmp&& other) noexcept;
-    Bmp& operator=(const Bmp& rhs);
-    Bmp& operator=(Bmp&& rhs) noexcept;
-    friend void swap(Bmp& a, Bmp& b);
+    BMP() = default;
+    BMP(int width, int height);
+    BMP(BMP_View view);
+    ~BMP();
+    BMP(const BMP& other);
+    BMP(BMP&& other) noexcept;
+    BMP& operator=(const BMP& rhs);
+    BMP& operator=(BMP&& rhs) noexcept;
+    friend void swap(BMP& a, BMP& b);
 
     enum class ReadResult {
         success,
@@ -93,13 +93,13 @@ private:
     friend DataVectorTask;
 };
 
-class BmpView {
+class BMP_View {
 public:
-    BmpView() = default;
-    BmpView(Bmp& bmp);
-    BmpView(Bmp& bmp, int row, int col, int width, int height);
-    BmpView& operator=(Bmp& rhs);
-    ~BmpView() = default;
+    BMP_View() = default;
+    BMP_View(BMP& bmp);
+    BMP_View(BMP& bmp, int row, int col, int width, int height);
+    BMP_View& operator=(BMP& rhs);
+    ~BMP_View() = default;
 
     int width() const;
     int height() const;
@@ -107,10 +107,10 @@ public:
     RGB operator()(int row, int col) const;
     RGB& operator()(int row, int col);
 
-    static void replace(BmpView subBmp, BmpView src);
+    static void replace(BMP_View subBmp, BMP_View src);
 
 private:
-    Bmp* bmp_ = nullptr;
+    BMP* bmp_ = nullptr;
     int row_;
     int col_;
     int width_;

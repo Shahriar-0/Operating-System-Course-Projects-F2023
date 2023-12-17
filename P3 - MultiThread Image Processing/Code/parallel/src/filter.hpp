@@ -38,26 +38,26 @@ struct Point {
     int y;
 };
 
-void flip(bmp::BmpView img, FlipType type);
-void rotate(bmp::Bmp& img, RotateType type);
+void flip(BMP24::BMP_View img, FlipType type);
+void rotate(BMP24::BMP& img, RotateType type);
 
-void invert(bmp::BmpView img);
-void grayscale(bmp::BmpView img);
-void blackWhite(bmp::BmpView img, uint8_t threshold = 127);
-void sepia(bmp::BmpView img);
+void invert(BMP24::BMP_View img);
+void grayscale(BMP24::BMP_View img);
+void blackWhite(BMP24::BMP_View img, uint8_t threshold = 127);
+void sepia(BMP24::BMP_View img);
 
 Kernel knormalize(Kernel kernel);
-void kernel(bmp::BmpView img, Kernel kernel);
+void kernel(BMP24::BMP_View img, Kernel kernel);
 
-void emboss(bmp::BmpView img);
-void guassianBlur(bmp::BmpView img);
-void boxBlur(bmp::BmpView img);
-void sharpen(bmp::BmpView img);
-void edgeDetect(bmp::BmpView img);
-void purpleHaze(bmp::BmpView img);
+void emboss(BMP24::BMP_View img);
+void guassianBlur(BMP24::BMP_View img);
+void boxBlur(BMP24::BMP_View img);
+void sharpen(BMP24::BMP_View img);
+void edgeDetect(BMP24::BMP_View img);
+void purpleHaze(BMP24::BMP_View img);
 
-void drawLine(bmp::BmpView img, Point p1, Point p2, bmp::RGB color);
-void diagonalHatch(bmp::Bmp& img, bmp::RGB color);
+void drawLine(BMP24::BMP_View img, Point p1, Point p2, BMP24::RGB color);
+void diagonalHatch(BMP24::BMP& img, BMP24::RGB color);
 
 }  // namespace filter
 

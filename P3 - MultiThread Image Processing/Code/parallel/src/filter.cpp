@@ -3,16 +3,16 @@
 #include <cmath>
 
 namespace filter {
-    
+
 std::unordered_map<KernelType, Kernel> kernels = {
     {KernelType::emboss, Kernel{-2, -1, 0, -1, 1, 1, 0, 1, 2}},
     {KernelType::guassianBlur, Kernel{1, 2, 1, 2, 4, 2, 1, 2, 1}},
     {KernelType::boxBlur, Kernel{1, 1, 1, 1, 1, 1, 1, 1, 1}},
     {KernelType::sharpen, Kernel{0, -1, 0, -1, 5, -1, 0, -1, 0}},
     {KernelType::edgeDetect, Kernel{0, 1, 0, 1, -4, 1, 0, 1, 0}},
-};   
+};
 
-void flip(bmp::BmpView img, FlipType type) {
+void flip(BMP24::BMP_View img, FlipType type) {
     if (type == FlipType::oneeighty) {
         for (int row = 0; row < img.height(); ++row) {
             for (int col = 0; col < img.width() / 2; ++col) {
@@ -34,8 +34,8 @@ void flip(bmp::BmpView img, FlipType type) {
     }
 }
 
-void rotate(bmp::Bmp& img, RotateType type) {
-    bmp::Bmp tmp(img);
+void rotate(BMP24::BMP& img, RotateType type) {
+    BMP24::BMP tmp(img);
     if (!img.create(img.height(), img.width())) return;
     if (type == RotateType::clockwise) {
         for (int row = 0; row < img.height(); ++row) {
@@ -52,37 +52,37 @@ void rotate(bmp::Bmp& img, RotateType type) {
     }
 }
 
-void invert(bmp::BmpView img) {
+void invert(BMP24::BMP_View img) {
     for (int row = 0; row < img.height(); ++row) {
         for (int col = 0; col < img.width(); ++col) {
             auto& pixel = img(row, col);
-            pixel = bmp::RGB(255 - pixel.red, 255 - pixel.grn, 255 - pixel.blu);
+            pixel = BMP24::RGB(255 - pixel.red, 255 - pixel.grn, 255 - pixel.blu);
         }
     }
 }
 
-void grayscale(bmp::BmpView img) {
+void grayscale(BMP24::BMP_View img) {
     for (int row = 0; row < img.height(); ++row) {
         for (int col = 0; col < img.width(); ++col) {
             auto& pixel = img(row, col);
             auto gray = (pixel.red + pixel.grn + pixel.blu) / 3;
-            pixel = bmp::RGB(gray, gray, gray);
+            pixel = BMP24::RGB(gray, gray, gray);
         }
     }
 }
 
-void blackWhite(bmp::BmpView img, uint8_t threshold) {
+void blackWhite(BMP24::BMP_View img, uint8_t threshold) {
     for (int row = 0; row < img.height(); ++row) {
         for (int col = 0; col < img.width(); ++col) {
             auto& pixel = img(row, col);
             auto gray = (pixel.red + pixel.grn + pixel.blu) / 3;
             const uint8_t bw = gray > threshold ? 255 : 0;
-            pixel = bmp::RGB(bw, bw, bw);
+            pixel = BMP24::RGB(bw, bw, bw);
         }
     }
 }
 
-void sepia(bmp::BmpView img) {
+void sepia(BMP24::BMP_View img) {
     for (int row = 0; row < img.height(); ++row) {
         for (int col = 0; col < img.width(); ++col) {
             auto& pixel = img(row, col);
@@ -97,7 +97,7 @@ void sepia(bmp::BmpView img) {
     }
 }
 
-void purpleHaze(bmp::BmpView img) {
+void purpleHaze(BMP24::BMP_View img) {
     for (int row = 0; row < img.height(); ++row) {
         for (int col = 0; col < img.width(); ++col) {
             auto& pixel = img(row, col);
@@ -112,19 +112,17 @@ void purpleHaze(bmp::BmpView img) {
 Kernel knormalize(Kernel kernel) {
     constexpr float epsilon = 1e-3;
     float sum = 0;
-    for (int i = 0; i < 9; ++i) 
-        sum += kernel[i];
+    for (int i = 0; i < 9; ++i) sum += kernel[i];
     if (sum >= -epsilon && sum <= epsilon) return kernel;
-    for (int i = 0; i < 9; ++i) 
-        kernel[i] /= sum;
+    for (int i = 0; i < 9; ++i) kernel[i] /= sum;
     return kernel;
 }
 
-void kernel(bmp::BmpView img, Kernel kernel) {
+void kernel(BMP24::BMP_View img, Kernel kernel) {
     static const int dirX[] = {-1, -1, -1, 0, 0, 0, 1, 1, 1};
     static const int dirY[] = {-1, 0, 1, -1, 0, 1, -1, 0, 1};
 
-    const bmp::Bmp imgCpy = img;
+    const BMP24::BMP imgCpy = img;
 
     auto inImage = [&imgCpy](int row, int col) -> bool {
         return row >= 0 && row < imgCpy.height() && col >= 0 && col < imgCpy.width();
@@ -134,7 +132,7 @@ void kernel(bmp::BmpView img, Kernel kernel) {
         for (int col = 0; col < img.width(); ++col) {
             float red = 0, green = 0, blue = 0;
             for (int i = 0; i < 9; ++i) {
-                bmp::RGB pixel = imgCpy(row, col);
+                BMP24::RGB pixel = imgCpy(row, col);
                 if (inImage(row + dirX[i], col + dirY[i])) {
                     pixel = imgCpy(row + dirX[i], col + dirY[i]);
                 }
@@ -151,27 +149,19 @@ void kernel(bmp::BmpView img, Kernel kernel) {
     }
 }
 
-void emboss(bmp::BmpView img) {
-    kernel(img, kernels[KernelType::emboss]);
-}
+void emboss(BMP24::BMP_View img) { kernel(img, kernels[KernelType::emboss]); }
 
-void guassianBlur(bmp::BmpView img) {
+void guassianBlur(BMP24::BMP_View img) {
     kernel(img, knormalize(kernels[KernelType::guassianBlur]));
 }
 
-void boxBlur(bmp::BmpView img) {
-    kernel(img, knormalize(kernels[KernelType::boxBlur]));
-}
+void boxBlur(BMP24::BMP_View img) { kernel(img, knormalize(kernels[KernelType::boxBlur])); }
 
-void sharpen(bmp::BmpView img) {
-    kernel(img, kernels[KernelType::sharpen]);
-}
+void sharpen(BMP24::BMP_View img) { kernel(img, kernels[KernelType::sharpen]); }
 
-void edgeDetect(bmp::BmpView img) {
-    kernel(img, kernels[KernelType::edgeDetect]);
-}
+void edgeDetect(BMP24::BMP_View img) { kernel(img, kernels[KernelType::edgeDetect]); }
 
-void drawLine(bmp::BmpView img, Point p1, Point p2, bmp::RGB color) {
+void drawLine(BMP24::BMP_View img, Point p1, Point p2, BMP24::RGB color) {
     int dx = p2.x - p1.x;
     int dy = p2.y - p1.y;
     int steps = std::max(std::abs(dx), std::abs(dy));
@@ -188,7 +178,7 @@ void drawLine(bmp::BmpView img, Point p1, Point p2, bmp::RGB color) {
     }
 }
 
-void diagonalHatch(bmp::BmpView img, bmp::RGB color) {
+void diagonalHatch(BMP24::BMP_View img, BMP24::RGB color) {
     int width = img.width() - 1;
     int height = img.height() - 1;
     drawLine(img, {0, height}, {0, width}, color);

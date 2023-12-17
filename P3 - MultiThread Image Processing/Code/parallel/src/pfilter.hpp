@@ -7,11 +7,11 @@
 
 namespace pfilter {
 
-using FilterFunc = void (*)(bmp::BmpView);
+using FilterFunc = void (*)(BMP24::BMP_View);
 
 class FilterTask : public thread::Task {
 public:
-    FilterTask(bmp::BmpView view, FilterFunc filter)
+    FilterTask(BMP24::BMP_View view, FilterFunc filter)
         : view_(view), filter_(filter) {}
 
     void run() override {
@@ -19,22 +19,22 @@ public:
     }
 
 private:
-    bmp::BmpView view_;
+    BMP24::BMP_View view_;
     FilterFunc filter_;
 };
 
 class ReplaceTask : public thread::Task {
 public:
-    ReplaceTask(bmp::BmpView subBmp, bmp::BmpView src)
+    ReplaceTask(BMP24::BMP_View subBmp, BMP24::BMP_View src)
         : subBmp_(subBmp), src_(src) {}
 
     void run() override {
-        bmp::BmpView::replace(subBmp_, src_);
+        BMP24::BMP_View::replace(subBmp_, src_);
     }
 
 private:
-    bmp::BmpView subBmp_;
-    bmp::BmpView src_;
+    BMP24::BMP_View subBmp_;
+    BMP24::BMP_View src_;
 };
 
 } // namespace pfilter
