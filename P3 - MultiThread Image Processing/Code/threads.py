@@ -31,13 +31,17 @@ if __name__ == "__main__":
     import sys
 
     subprocess.run([speedup_path, "clean"])
+
     print("\033[92m" + "Running serial" + "\033[0m")
     subprocess.run([speedup_path, "runserial"])
-    print("\033[92m" + "Done running serial" + "\033[0m")
+    print("\033[35m" + "Done running serial" + "\033[0m")
+
     input_number = sys.argv[1]
     print("\033[92m" + "Running parallel" + "\033[0m")
-    for thread_count in tqdm(thread_counts):
-        print("\r\033[92m" + f"Running parallel with {thread_count} threads" + "\033[0m", end="")
+    for thread_count in tqdm(thread_counts, colour="green"):
+        print(
+            "\r\033[92m" + f"Running parallel with {thread_count} threads" + "\033[0m",
+            end="",
+        )
         modify_scripts(thread_count, input_number)
-    print("\r\033[92m" + "Done running parallel" + "\033[0m")
-
+    print("\r\033[35m" + "Done running parallel" + "\033[0m")

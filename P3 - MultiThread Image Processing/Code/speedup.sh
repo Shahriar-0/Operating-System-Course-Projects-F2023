@@ -6,7 +6,7 @@ BOLD='\033[1m'
 BOLDBLUE='\033[1;34m'
 NC='\033[0m'
 
-inputMain="../Assets/Pictures/input3.bmp"
+inputMain="../Assets/Pictures/input4.bmp"
 input="../../$inputMain"
 serialTxt="../Assets/Results/serial.txt"
 serialBmp="../Assets/Pictures/output_serial.bmp"
@@ -22,8 +22,8 @@ function showResult {
     serial=$(tail -1 $serialTxt | grep -o '[0-9.]*')
     parallel=$(tail -1 $parallelThreadTxt | grep -o '[0-9.]*')
     speedup=$(echo "scale=2; $serial / $parallel" | bc)
-    printf "Serial: \t\t\t  Parallel:\n"
-    paste -d '|' <(sed "s/^/$(printf "${RED}")/" $serialTxt) <(sed "s/^/$(printf "${GREEN}")/" $parallelTxt | sed "s/\x1b\[0m/\x1b\[0m${GREEN}/") | column -t -s '|'
+    printf "Serial: \t\t\tParallel with $threads threads:\n"
+    paste -d '|' <(sed "s/^/$(printf "${RED}")/" $serialTxt) <(sed "s/^/$(printf "${GREEN}")/" $parallelThreadTxt | sed "s/\x1b\[0m/\x1b\[0m${GREEN}/") | column -t -s '|'
     echo -e "${BOLDBLUE}Speedup: $speedup${NC}"
 }
 
@@ -81,6 +81,8 @@ elif [ $# -eq 1 ] && [ "$1" = "run" ]; then
     runParallel
 elif [ $# -eq 2 ] && [ "$1" = "threads" ]; then
     python threads.py $2
+elif [ $# -eq 2 ] && [ "$1" = "graph" ]; then
+    python graph.py $2
 else
     echo "Usage: ./speedup.sh [clean|showresult|showpictures|show|run| threads <input picture>]"
 fi
