@@ -64,7 +64,7 @@ TimeRes::rep diagonalHatch(bmp::Bmp& image, thread::Pool& pool) {
     }
 
     auto Diagonal = [](bmp::BmpView view) {
-        filter::drawline(view, filter::Point{0, view.height() - 1},
+        filter::drawLine(view, filter::Point{0, view.height() - 1},
                          filter::Point{view.width() - 1, 0}, bmp::RGB(255, 255, 255));
     };
 
@@ -91,7 +91,7 @@ TimeRes::rep gaussianBlur(bmp::Bmp& image, thread::Pool& pool) {
     }
 
     for (unsigned i = 0; i < pool.count(); ++i) {
-        pool.add(new pfilter::FilterTask(viewsCuts[i], filter::guassianblur));
+        pool.add(new pfilter::FilterTask(viewsCuts[i], filter::guassianBlur));
     }
     pool.waitForTasks();
     for (unsigned i = 0; i < pool.count(); ++i) {

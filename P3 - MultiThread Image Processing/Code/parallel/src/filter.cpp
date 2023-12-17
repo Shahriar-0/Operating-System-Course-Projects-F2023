@@ -3,51 +3,52 @@
 #include <cmath>
 
 namespace filter {
+    
+std::unordered_map<KernelType, Kernel> kernels = {
+    {KernelType::emboss, Kernel{-2, -1, 0, -1, 1, 1, 0, 1, 2}},
+    {KernelType::guassianBlur, Kernel{1, 2, 1, 2, 4, 2, 1, 2, 1}},
+    {KernelType::boxBlur, Kernel{1, 1, 1, 1, 1, 1, 1, 1, 1}},
+    {KernelType::sharpen, Kernel{0, -1, 0, -1, 5, -1, 0, -1, 0}},
+    {KernelType::edgeDetect, Kernel{0, 1, 0, 1, -4, 1, 0, 1, 0}},
+};   
 
 void flip(bmp::BmpView img, FlipType type) {
-    switch (type) {
-    case FlipType::horizontal:
+    if (type == FlipType::oneeighty) {
         for (int row = 0; row < img.height(); ++row) {
             for (int col = 0; col < img.width() / 2; ++col) {
                 std::swap(img(row, col), img(row, img.width() - 1 - col));
             }
         }
-        break;
-    case FlipType::vertical:
+    } else if (type == FlipType::vertical) {
         for (int row = 0; row < img.height() / 2; ++row) {
             for (int col = 0; col < img.width(); ++col) {
                 std::swap(img(row, col), img(img.height() - 1 - row, col));
             }
         }
-        break;
-    case FlipType::oneeighty:
+    } else if (type == FlipType::horizontal) {
         for (int row = 0; row < img.height() / 2; ++row) {
             for (int col = 0; col < img.width(); ++col) {
                 std::swap(img(row, col), img(img.height() - 1 - row, img.width() - 1 - col));
             }
         }
-        break;
     }
 }
 
 void rotate(bmp::Bmp& img, RotateType type) {
     bmp::Bmp tmp(img);
     if (!img.create(img.height(), img.width())) return;
-    switch (type) {
-    case RotateType::clockwise:
+    if (type == RotateType::clockwise) {
         for (int row = 0; row < img.height(); ++row) {
             for (int col = 0; col < img.width(); ++col) {
                 img(row, col) = tmp(tmp.height() - 1 - col, row);
             }
         }
-        break;
-    case RotateType::counterclockwise:
+    } else if (type == RotateType::counterclockwise) {
         for (int row = 0; row < img.height(); ++row) {
             for (int col = 0; col < img.width(); ++col) {
                 img(row, col) = tmp(col, tmp.width() - 1 - row);
             }
         }
-        break;
     }
 }
 
@@ -70,7 +71,7 @@ void grayscale(bmp::BmpView img) {
     }
 }
 
-void blackwhite(bmp::BmpView img, uint8_t threshold) {
+void blackWhite(bmp::BmpView img, uint8_t threshold) {
     for (int row = 0; row < img.height(); ++row) {
         for (int col = 0; col < img.width(); ++col) {
             auto& pixel = img(row, col);
@@ -86,35 +87,36 @@ void sepia(bmp::BmpView img) {
         for (int col = 0; col < img.width(); ++col) {
             auto& pixel = img(row, col);
             auto tmp = pixel;
-            pixel.red = std::min<int>(255, (0.393 * tmp.red) + (0.769 * tmp.grn) + (0.189 * tmp.blu));
-            pixel.grn = std::min<int>(255, (0.349 * tmp.red) + (0.686 * tmp.grn) + (0.168 * tmp.blu));
-            pixel.blu = std::min<int>(255, (0.272 * tmp.red) + (0.534 * tmp.grn) + (0.131 * tmp.blu));
+            pixel.red =
+                std::min<int>(255, (0.393 * tmp.red) + (0.769 * tmp.grn) + (0.189 * tmp.blu));
+            pixel.grn =
+                std::min<int>(255, (0.349 * tmp.red) + (0.686 * tmp.grn) + (0.168 * tmp.blu));
+            pixel.blu =
+                std::min<int>(255, (0.272 * tmp.red) + (0.534 * tmp.grn) + (0.131 * tmp.blu));
         }
     }
 }
 
 void purpleHaze(bmp::BmpView img) {
     for (int row = 0; row < img.height(); ++row) {
-            for (int col = 0; col < img.width(); ++col) {
-                auto& pixel = img(row, col);
-                auto tmp = pixel;
-                pixel.red = std::min<int>(255, (0.5 * tmp.red) + (0.5 * tmp.blu) + (0.3 * tmp.grn));
-                pixel.grn = std::min<int>(255, (0.16 * tmp.red) + (0.16 * tmp.blu) + (0.5 * tmp.grn));
-                pixel.blu = std::min<int>(255, (0.6 * tmp.red) + (0.8 * tmp.blu) + (0.2 * tmp.grn));
-            }
+        for (int col = 0; col < img.width(); ++col) {
+            auto& pixel = img(row, col);
+            auto tmp = pixel;
+            pixel.red = std::min<int>(255, (0.5 * tmp.red) + (0.5 * tmp.blu) + (0.3 * tmp.grn));
+            pixel.grn = std::min<int>(255, (0.16 * tmp.red) + (0.16 * tmp.blu) + (0.5 * tmp.grn));
+            pixel.blu = std::min<int>(255, (0.6 * tmp.red) + (0.8 * tmp.blu) + (0.2 * tmp.grn));
         }
+    }
 }
 
 Kernel knormalize(Kernel kernel) {
     constexpr float epsilon = 1e-3;
     float sum = 0;
-    for (int i = 0; i < 9; ++i) {
+    for (int i = 0; i < 9; ++i) 
         sum += kernel[i];
-    }
     if (sum >= -epsilon && sum <= epsilon) return kernel;
-    for (int i = 0; i < 9; ++i) {
+    for (int i = 0; i < 9; ++i) 
         kernel[i] /= sum;
-    }
     return kernel;
 }
 
@@ -150,31 +152,26 @@ void kernel(bmp::BmpView img, Kernel kernel) {
 }
 
 void emboss(bmp::BmpView img) {
-    static const Kernel emboss = {-2, -1, 0, -1, 1, 1, 0, 1, 2};
-    kernel(img, emboss);
+    kernel(img, kernels[KernelType::emboss]);
 }
 
-void guassianblur(bmp::BmpView img) {
-    static const Kernel guassian = knormalize({1, 2, 1, 2, 4, 2, 1, 2, 1});
-    kernel(img, guassian);
+void guassianBlur(bmp::BmpView img) {
+    kernel(img, knormalize(kernels[KernelType::guassianBlur]));
 }
 
-void boxblur(bmp::BmpView img) {
-    static const Kernel boxblur = knormalize({1, 1, 1, 1, 1, 1, 1, 1, 1});
-    kernel(img, boxblur);
+void boxBlur(bmp::BmpView img) {
+    kernel(img, knormalize(kernels[KernelType::boxBlur]));
 }
 
 void sharpen(bmp::BmpView img) {
-    static const Kernel sharpen = {0, -1, 0, -1, 5, -1, 0, -1, 0};
-    kernel(img, sharpen);
+    kernel(img, kernels[KernelType::sharpen]);
 }
 
-void edgedetect(bmp::BmpView img) {
-    static const Kernel edgedetect = {-1, -1, -1, -1, 8, -1, -1, -1, -1};
-    kernel(img, edgedetect);
+void edgeDetect(bmp::BmpView img) {
+    kernel(img, kernels[KernelType::edgeDetect]);
 }
 
-void drawline(bmp::BmpView img, Point p1, Point p2, bmp::RGB color) {
+void drawLine(bmp::BmpView img, Point p1, Point p2, bmp::RGB color) {
     int dx = p2.x - p1.x;
     int dy = p2.y - p1.y;
     int steps = std::max(std::abs(dx), std::abs(dy));
@@ -184,7 +181,6 @@ void drawline(bmp::BmpView img, Point p1, Point p2, bmp::RGB color) {
 
     float x = p1.x;
     float y = p1.y;
-
     for (int i = 0; i <= steps; ++i) {
         img(y, x) = color;
         x += xinc;
@@ -192,21 +188,10 @@ void drawline(bmp::BmpView img, Point p1, Point p2, bmp::RGB color) {
     }
 }
 
-void diamond(bmp::BmpView img, bmp::RGB color) {
-    const Point top = {img.width() / 2, 0};
-    const Point left = {0, img.height() / 2};
-    const Point right = {img.width() - 1, img.height() / 2};
-    const Point bottom = {img.width() / 2, img.height() - 1};
-    drawline(img, left, top, color);
-    drawline(img, bottom, right, color);
-    drawline(img, top, right, color);
-    drawline(img, left, bottom, color);
-}
-
 void diagonalHatch(bmp::BmpView img, bmp::RGB color) {
     int width = img.width() - 1;
     int height = img.height() - 1;
-    drawline(img, {0, height}, {0, width}, color);
+    drawLine(img, {0, height}, {0, width}, color);
 }
 
-} // namespace filter
+}  // namespace filter

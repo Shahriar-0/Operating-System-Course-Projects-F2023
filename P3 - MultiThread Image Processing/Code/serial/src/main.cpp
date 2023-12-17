@@ -1,5 +1,6 @@
 #include <chrono>
 #include <cstdlib>
+#include <functional>
 #include <iostream>
 
 #include "bmp.hpp"
@@ -33,7 +34,7 @@ TimeRes::rep diagonalHatch(bmp::Bmp& image) {
 
 TimeRes::rep gaussianBlur(bmp::Bmp& image) {
     auto tstart = chrono::high_resolution_clock::now();
-    filter::guassianblur(image);
+    filter::guassianBlur(image);
     auto tend = chrono::high_resolution_clock::now();
     return chrono::duration_cast<TimeRes>(tend - tstart).count();
 }
@@ -55,18 +56,20 @@ int main(int argc, const char* argv[]) {
     auto timeReadEnd = chrono::high_resolution_clock::now();
 
     auto timeFlip = flip(image);
-    auto timeEmboss = purpleHaze(image);
+    auto timePurpleHaze = purpleHaze(image);
     auto timeDiagonal = diagonalHatch(image);
     auto timeGaussian = gaussianBlur(image);
 
     auto timeEnd = chrono::high_resolution_clock::now();
 
-    std::cout << "Read Time: " << chrono::duration_cast<TimeRes>(timeReadEnd - timeStart).count() << " ms\n";
+    std::cout << "Read Time: " << chrono::duration_cast<TimeRes>(timeReadEnd - timeStart).count()
+              << " ms\n";
     std::cout << "Flip Time: " << timeFlip << " ms\n";
-    std::cout << "Purple Haze Time: " << timeEmboss << " ms\n";
+    std::cout << "Purple Haze Time: " << timePurpleHaze << " ms\n";
     std::cout << "Diagonal Hatch Time: " << timeDiagonal << " ms\n";
     std::cout << "Gaussian Blur Time: " << timeGaussian << " ms\n";
-    std::cout << "Execution Time: " << chrono::duration_cast<TimeRes>(timeEnd - timeStart).count() << " ms\n";
+    std::cout << "Execution Time: " << chrono::duration_cast<TimeRes>(timeEnd - timeStart).count()
+              << " ms\n";
 
     if (!image.write(OUTPUT)) {
         std::cerr << "Error writing file\n";
