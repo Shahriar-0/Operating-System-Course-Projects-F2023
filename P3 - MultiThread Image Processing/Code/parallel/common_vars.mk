@@ -1,7 +1,7 @@
-CC        = g++
 CXXFLAGS += -Wall -pedantic -pthread
 CC        = $(CXX) $(CXXFLAGS)
-CPPFLAGS += -std=c++11
+CPPFLAGS += -std=c++17
+CC       += $(CPPFLAGS)
 
 MKDIR  = mkdir -p
 RM     = rm -f

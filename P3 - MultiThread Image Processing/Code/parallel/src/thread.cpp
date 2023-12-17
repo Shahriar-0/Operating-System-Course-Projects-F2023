@@ -1,15 +1,9 @@
 #include "thread.hpp"
 
 namespace thread {
-
 // Thread
-
-void Thread::start() {
-    pthread_create(&tid_, nullptr, entry, this);
-}
-void Thread::join() {
-    pthread_join(tid_, nullptr);
-}
+void Thread::start() { pthread_create(&tid_, nullptr, entry, this); }
+void Thread::join() { pthread_join(tid_, nullptr); }
 void* Thread::entry(void* arg) {
     Thread* thread = static_cast<Thread*>(arg);
     thread->run();
@@ -81,4 +75,4 @@ void Pool::add(Task* task) { workQueue_.add(task); }
 void Pool::waitForTasks() { workQueue_.waitToFinish(threads_.size()); }
 unsigned Pool::count() const { return threads_.size(); }
 
-} // namespace thread
+}  // namespace thread

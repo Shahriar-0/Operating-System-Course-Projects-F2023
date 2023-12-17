@@ -128,9 +128,9 @@ void kernel(BMP24::BMP_View img, Kernel kernel) {
             }
 
             auto& pixel = img(row, col);
-            pixel.red = std::min(255, std::max<int>(0, red));
-            pixel.grn = std::min(255, std::max<int>(0, green));
-            pixel.blu = std::min(255, std::max<int>(0, blue));
+            pixel.red = std::clamp<int>(red, 0, 255);
+            pixel.grn = std::clamp<int>(green, 0, 255);
+            pixel.blu = std::clamp<int>(blue, 0, 255);
         }
     }
 }

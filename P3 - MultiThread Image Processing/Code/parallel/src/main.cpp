@@ -16,10 +16,12 @@ int main(int argc, const char* argv[]) {
     }
     auto timeReadEnd = chrono::high_resolution_clock::now();
 
-    auto timeFlip = flip(image, pool);
+    // clang-format off
+    auto timeFlip       = flip(image, pool);
     auto timePurpleHaze = purpleHaze(image, pool);
-    auto timeDiagonal = diagonalHatch(image, pool);
-    auto timeGaussian = gaussianBlur(image, pool);
+    auto timeDiagonal   = diagonalHatch(image, pool);
+    auto timeGaussian   = gaussianBlur(image, pool);
+    // clang-format on
 
     auto timeEnd = chrono::high_resolution_clock::now();
 
