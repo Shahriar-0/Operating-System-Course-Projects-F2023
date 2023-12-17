@@ -27,12 +27,6 @@ using index_sequence_for = make_index_sequence<sizeof...(T)>;
 #endif
 }  // namespace detail
 
-class Task {
-public:
-    virtual ~Task() = default;
-    virtual void run() = 0;
-};
-
 template <class Function, class... Args>
 class GenericTask final : public Task {
 public:
@@ -55,7 +49,6 @@ template <typename F, typename... Args>
 GenericTask<F, Args...> makeGeneric(F&& f, Args&&... args) {
     return GenericTask<F, Args...>(std::forward<F>(f), std::forward<Args>(args)...);
 }
-
 template <class... Ts>
 class GenericTask final : public Task {
 public:

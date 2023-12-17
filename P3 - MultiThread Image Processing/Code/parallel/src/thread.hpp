@@ -79,6 +79,6 @@ private:
     PoolQueue workQueue_;
 };
 
-} // namespace thread
+}  // namespace thread
 
-#endif // THREAD_HPP_INCLUDE
+#endif  // THREAD_HPP_INCLUDE
