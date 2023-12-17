@@ -6,6 +6,7 @@
 #include <iostream>
 #include <utility>
 #include <unordered_map>
+#include <functional>
 
 #include "bmp.hpp"
 
@@ -55,6 +56,9 @@ void boxBlur(BMP24::BMP_View img);
 void sharpen(BMP24::BMP_View img);
 void edgeDetect(BMP24::BMP_View img);
 void purpleHaze(BMP24::BMP_View img);
+void applyColorTransformation(BMP24::BMP_View img, float coeff1, float coeff2, float coeff3,
+                              float coeff4, float coeff5, float coeff6, float coeff7, float coeff8,
+                              float coeff9);
 
 void drawLine(BMP24::BMP_View img, Point p1, Point p2, BMP24::RGB color);
 void diagonalHatch(BMP24::BMP& img, BMP24::RGB color);

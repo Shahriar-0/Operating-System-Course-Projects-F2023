@@ -6,7 +6,7 @@ BOLD='\033[1m'
 BOLDBLUE='\033[1;34m'
 NC='\033[0m'
 
-inputMain="../Assets/Pictures/input.bmp"
+inputMain="../Assets/Pictures/input2.bmp"
 input="../../$inputMain"
 serialTxt="../Assets/Results/serial.txt"
 serialBmp="../Assets/Pictures/output_serial.bmp"

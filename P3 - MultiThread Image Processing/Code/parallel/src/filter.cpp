@@ -15,21 +15,18 @@ std::unordered_map<KernelType, Kernel> kernels = {
 void flip(BMP24::BMP_View img, FlipType type) {
     if (type == FlipType::oneeighty) {
         for (int row = 0; row < img.height(); ++row) {
-            for (int col = 0; col < img.width() / 2; ++col) {
+            for (int col = 0; col < img.width() / 2; ++col) 
                 std::swap(img(row, col), img(row, img.width() - 1 - col));
-            }
         }
     } else if (type == FlipType::vertical) {
         for (int row = 0; row < img.height() / 2; ++row) {
-            for (int col = 0; col < img.width(); ++col) {
+            for (int col = 0; col < img.width(); ++col) 
                 std::swap(img(row, col), img(img.height() - 1 - row, col));
-            }
         }
     } else if (type == FlipType::horizontal) {
         for (int row = 0; row < img.height() / 2; ++row) {
-            for (int col = 0; col < img.width(); ++col) {
+            for (int col = 0; col < img.width(); ++col) 
                 std::swap(img(row, col), img(img.height() - 1 - row, img.width() - 1 - col));
-            }
         }
     }
 }
@@ -52,61 +49,56 @@ void rotate(BMP24::BMP& img, RotateType type) {
     }
 }
 
-void invert(BMP24::BMP_View img) {
+void applyColorTransformation(BMP24::BMP_View img, std::function<uint8_t(uint8_t)> transform) {
     for (int row = 0; row < img.height(); ++row) {
         for (int col = 0; col < img.width(); ++col) {
             auto& pixel = img(row, col);
-            pixel = BMP24::RGB(255 - pixel.red, 255 - pixel.grn, 255 - pixel.blu);
+            pixel = BMP24::RGB(transform(pixel.red), transform(pixel.grn), transform(pixel.blu));
         }
     }
+}
+
+void invert(BMP24::BMP_View img) {
+    applyColorTransformation(img, [](uint8_t value) { return 255 - value; });
 }
 
 void grayscale(BMP24::BMP_View img) {
-    for (int row = 0; row < img.height(); ++row) {
-        for (int col = 0; col < img.width(); ++col) {
-            auto& pixel = img(row, col);
-            auto gray = (pixel.red + pixel.grn + pixel.blu) / 3;
-            pixel = BMP24::RGB(gray, gray, gray);
-        }
-    }
+    applyColorTransformation(img, [](uint8_t value) {
+        auto gray = (value + value + value) / 3;
+        return gray;
+    });
 }
 
 void blackWhite(BMP24::BMP_View img, uint8_t threshold) {
-    for (int row = 0; row < img.height(); ++row) {
-        for (int col = 0; col < img.width(); ++col) {
-            auto& pixel = img(row, col);
-            auto gray = (pixel.red + pixel.grn + pixel.blu) / 3;
-            const uint8_t bw = gray > threshold ? 255 : 0;
-            pixel = BMP24::RGB(bw, bw, bw);
-        }
-    }
+    applyColorTransformation(img, [threshold](uint8_t value) {
+        const uint8_t bw = value > threshold ? 255 : 0;
+        return bw;
+    });
 }
 
-void sepia(BMP24::BMP_View img) {
+void applyColorTransformation(BMP24::BMP_View img, float coeff1, float coeff2, float coeff3,
+                              float coeff4, float coeff5, float coeff6, float coeff7, float coeff8,
+                              float coeff9) {
     for (int row = 0; row < img.height(); ++row) {
         for (int col = 0; col < img.width(); ++col) {
             auto& pixel = img(row, col);
             auto tmp = pixel;
             pixel.red =
-                std::min<int>(255, (0.393 * tmp.red) + (0.769 * tmp.grn) + (0.189 * tmp.blu));
+                std::min<int>(255, (coeff1 * tmp.red) + (coeff2 * tmp.grn) + (coeff3 * tmp.blu));
             pixel.grn =
-                std::min<int>(255, (0.349 * tmp.red) + (0.686 * tmp.grn) + (0.168 * tmp.blu));
+                std::min<int>(255, (coeff4 * tmp.red) + (coeff5 * tmp.grn) + (coeff6 * tmp.blu));
             pixel.blu =
-                std::min<int>(255, (0.272 * tmp.red) + (0.534 * tmp.grn) + (0.131 * tmp.blu));
+                std::min<int>(255, (coeff7 * tmp.red) + (coeff8 * tmp.grn) + (coeff9 * tmp.blu));
         }
     }
 }
 
+void sepia(BMP24::BMP_View img) {
+    applyColorTransformation(img, 0.393, 0.769, 0.189, 0.349, 0.686, 0.168, 0.272, 0.534, 0.131);
+}
+
 void purpleHaze(BMP24::BMP_View img) {
-    for (int row = 0; row < img.height(); ++row) {
-        for (int col = 0; col < img.width(); ++col) {
-            auto& pixel = img(row, col);
-            auto tmp = pixel;
-            pixel.red = std::min<int>(255, (0.5 * tmp.red) + (0.5 * tmp.blu) + (0.3 * tmp.grn));
-            pixel.grn = std::min<int>(255, (0.16 * tmp.red) + (0.16 * tmp.blu) + (0.5 * tmp.grn));
-            pixel.blu = std::min<int>(255, (0.6 * tmp.red) + (0.8 * tmp.blu) + (0.2 * tmp.grn));
-        }
-    }
+    applyColorTransformation(img, 0.5, 0.5, 0.3, 0.16, 0.16, 0.5, 0.6, 0.8, 0.2);
 }
 
 Kernel knormalize(Kernel kernel) {
@@ -151,9 +143,7 @@ void kernel(BMP24::BMP_View img, Kernel kernel) {
 
 void emboss(BMP24::BMP_View img) { kernel(img, kernels[KernelType::emboss]); }
 
-void guassianBlur(BMP24::BMP_View img) {
-    kernel(img, knormalize(kernels[KernelType::guassianBlur]));
-}
+void guassianBlur(BMP24::BMP_View img) { kernel(img, knormalize(kernels[KernelType::guassianBlur])); }
 
 void boxBlur(BMP24::BMP_View img) { kernel(img, knormalize(kernels[KernelType::boxBlur])); }
 

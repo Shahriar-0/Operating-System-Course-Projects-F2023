@@ -11,30 +11,10 @@ constexpr char OUTPUT[] = "../../../Assets/Pictures/output_serial.bmp";
 namespace chrono = std::chrono;
 using TimeRes = chrono::duration<float, std::milli>;
 
-TimeRes::rep flip(BMP24::BMP& image) {
-    auto tstart = chrono::high_resolution_clock::now();
-    filter::flip(image, filter::FlipType::vertical);
-    auto tend = chrono::high_resolution_clock::now();
-    return chrono::duration_cast<TimeRes>(tend - tstart).count();
-}
 
-TimeRes::rep purpleHaze(BMP24::BMP& image) {
+TimeRes::rep applyFilter(BMP24::BMP& image, std::function<void(BMP24::BMP&)> filterFunc) {
     auto tstart = chrono::high_resolution_clock::now();
-    filter::purpleHaze(image);
-    auto tend = chrono::high_resolution_clock::now();
-    return chrono::duration_cast<TimeRes>(tend - tstart).count();
-}
-
-TimeRes::rep diagonalHatch(BMP24::BMP& image) {
-    auto tstart = chrono::high_resolution_clock::now();
-    filter::diagonalHatch(image, BMP24::RGB(255, 255, 255));
-    auto tend = chrono::high_resolution_clock::now();
-    return chrono::duration_cast<TimeRes>(tend - tstart).count();
-}
-
-TimeRes::rep gaussianBlur(BMP24::BMP& image) {
-    auto tstart = chrono::high_resolution_clock::now();
-    filter::guassianBlur(image);
+    filterFunc(image);
     auto tend = chrono::high_resolution_clock::now();
     return chrono::duration_cast<TimeRes>(tend - tstart).count();
 }
@@ -55,10 +35,10 @@ int main(int argc, const char* argv[]) {
     }
     auto timeReadEnd = chrono::high_resolution_clock::now();
 
-    auto timeFlip = flip(image);
-    auto timePurpleHaze = purpleHaze(image);
-    auto timeDiagonal = diagonalHatch(image);
-    auto timeGaussian = gaussianBlur(image);
+    auto timeFlip = applyFilter(image, [](BMP24::BMP& img) { filter::flip(img, filter::FlipType::vertical); });
+    auto timePurpleHaze = applyFilter(image, [](BMP24::BMP& img) { filter::purpleHaze(img); });
+    auto timeDiagonal = applyFilter(image, [](BMP24::BMP& img) { filter::diagonalHatch(img, BMP24::RGB(255, 255, 255)); });
+    auto timeGaussian = applyFilter(image, [](BMP24::BMP& img) { filter::guassianBlur(img); });
 
     auto timeEnd = chrono::high_resolution_clock::now();
 

@@ -1,6 +1,0 @@
-Read Time: 1.94325 ms
-Flip Time: 1.29172 ms
-Purple Haze Time: 3.5918 ms
-Diagonal Hatch Time: 0.012101 ms
-Gaussian Blur Time: 33.0856 ms
-Execution Time: 39.926 ms
