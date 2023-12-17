@@ -33,18 +33,12 @@ void flip(BMP24::BMP_View img, FlipType type) {
 
 void rotate(BMP24::BMP& img, RotateType type) {
     BMP24::BMP tmp(img);
+    auto clockWise = [&tmp](int row, int col) { return tmp(tmp.height() - 1 - col, row); };
+    auto counterClockWise = [&tmp](int row, int col) { return tmp(col, tmp.width() - 1 - row); };
     if (!img.create(img.height(), img.width())) return;
-    if (type == RotateType::clockwise) {
-        for (int row = 0; row < img.height(); ++row) {
-            for (int col = 0; col < img.width(); ++col) {
-                img(row, col) = tmp(tmp.height() - 1 - col, row);
-            }
-        }
-    } else if (type == RotateType::counterclockwise) {
-        for (int row = 0; row < img.height(); ++row) {
-            for (int col = 0; col < img.width(); ++col) {
-                img(row, col) = tmp(col, tmp.width() - 1 - row);
-            }
+    for (int row = 0; row < img.height(); ++row) {
+        for (int col = 0; col < img.width(); ++col) {
+            img(row, col) = type == RotateType::clockwise ? clockWise(row, col) : counterClockWise(row, col);
         }
     }
 }
@@ -172,12 +166,12 @@ void diagonalHatch(BMP24::BMP& img, BMP24::RGB color) {
     int halfWidth = img.width() / 2;
     int halfHeight = img.height() / 2;
 
-    drawLine(BMP24::BMP_View(img, 0, halfWidth, halfWidth, halfHeight), {0, halfHeight - 1},
-             {halfWidth - 1, 0}, color);
-    drawLine(BMP24::BMP_View(img, 0, 0, halfWidth, halfHeight), {0, halfHeight - 1},
-             {halfWidth - 1, 0}, color);
-    drawLine(BMP24::BMP_View(img, halfHeight, 0, halfWidth, halfHeight), {0, halfHeight - 1},
-             {halfWidth - 1, 0}, color);
+    drawLine(BMP24::BMP_View(img, 0, halfWidth, halfWidth, halfHeight), 
+             {0, halfHeight - 1}, {halfWidth - 1, 0}, color);
+    drawLine(BMP24::BMP_View(img, 0, 0, halfWidth, halfHeight), 
+             {0, halfHeight - 1}, {halfWidth - 1, 0}, color);
+    drawLine(BMP24::BMP_View(img, halfHeight, 0, halfWidth, halfHeight), 
+             {0, halfHeight - 1}, {halfWidth - 1, 0}, color);
     drawLine(BMP24::BMP_View(img, halfHeight, halfWidth, halfWidth, halfHeight),
              {0, halfHeight - 1}, {halfWidth - 1, 0}, color);
 }
