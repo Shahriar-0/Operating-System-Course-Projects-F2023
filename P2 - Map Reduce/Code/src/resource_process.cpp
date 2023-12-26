@@ -41,7 +41,9 @@ void Resource::handleCMD(const std::string& cmd, const std::vector<std::string>&
     }
     else if (cmd == MSG_REPORT_BILL) {
         log_->info("Calling bill function");
-        bill(stoi(args[0]), args[1], 5);
+        srand(time(NULL));
+        int p = rand() % 12 + 1;
+        bill(stoi(args[0]), args[1], p);
         log_->info("bill function called");
     }
     else 
