@@ -26,14 +26,14 @@ private:
     void reportHandler();
     int  findBuilding(const std::string& name);
     
-    void getMax(const std::string& resource, const std::string& m, int index);
-    void mean(const std::string& resource, const std::string& m, int index);
-    void total(const std::string& resource, const std::string& m, int index);
-    void diff(const std::string& resource, const std::string& m, int index);
-    void bill(const std::string& resource, const std::string& m, int index);
+    void getMax(const std::string& resource, const std::string& month, int index, const std::string& name);
+    void mean(const std::string& resource, const std::string& month, int index, const std::string& name);
+    void total(const std::string& resource, const std::string& month, int index, const std::string& name);
+    void diff(const std::string& resource, const std::string& month, int index, const std::string& name);
+    void bill(const std::string& resource, const std::string& month, int index, const std::string& name);
     void printBuildings();
     std::vector<std::string> message(const std::string& msg, const std::string& resource,
-                                     const std::string& m, int index);
+                                     const std::string& month, int index, const std::string& name);
 
     Logger* log_;
     std::vector<Node*> buildings_;

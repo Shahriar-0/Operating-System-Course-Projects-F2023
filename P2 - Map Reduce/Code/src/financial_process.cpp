@@ -31,19 +31,20 @@ void Financial::handleCMD(const std::string& cmd, const std::vector<std::string>
     }
 }
 
-void Financial::bill(std::string buildingName, std::string resource, std::string m) {
+void Financial::bill(std::string buildingName, std::string resource, std::string month) {
     int buildingIndex = findBuilding(buildingName);
-    std::cout << "fuck u\n"; // don't touch this or it will break :)
-    std::vector<int> params = data_->calcParam(stoi(m));
+    std::cout << "fuck u\n";  // don't touch this or it will break :)
+    std::cout << buildingName << ' ' << resource << ' ' << month << std::endl;
+    std::vector<int> params = {3154, 314, 7912};//data_->calc(stoi(month));
     int finalParam = 0;
 
     std::map<std::string, int> resourceMap = {
         {WATER, params[0]}, {GAS, params[1]}, {ELECTRICITY, params[2]}};
 
     auto it = resourceMap.find(resource);
-    if (it != resourceMap.end()) 
+    if (it != resourceMap.end())
         finalParam = it->second;
-    else 
+    else
         throw std::runtime_error("Unknown resource: " + resource);
 
     buildings_[buildingIndex]->sendMessage(MSG_REPORT_DATA, {std::to_string(finalParam)});

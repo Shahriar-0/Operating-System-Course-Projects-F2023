@@ -14,7 +14,6 @@ int main(int argc, char* argv[]) {
     Logger* log = new FileConsoleLogger(COMPANY_NAME);
     try {
         Company company(argv[1], log);
-        sleep(1);
         company.run();
     } catch (std::runtime_error& e) {
         log->error(e.what());

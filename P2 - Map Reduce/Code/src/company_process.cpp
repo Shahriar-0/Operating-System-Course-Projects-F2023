@@ -19,8 +19,7 @@ Company::Company(const char* buildingsPath, Logger* log) {
 
 std::vector<std::string> Company::getBuildings(const char* path) {
     std::vector<std::string> names = GetFilesOfDirectory(path);
-    if (names.empty()) 
-        throw std::runtime_error("No buildings found in the directory");
+    if (names.empty()) throw std::runtime_error("No buildings found in the directory");
     return names;
 }
 
@@ -96,17 +95,19 @@ void Company::run() {
 }
 
 void Company::printPrompt() {
-    std::cout << "-----------------------------------------------------\n"
-              << GREEN << ">> " << RESET;
+    std::cout << YELLOW << "-----------------------------------------------------\n" << RESET
+              << GREEN  << ">> " << RESET;
 }
 
 void Company::handleCMD(std::string& cmd, const std::vector<std::string>& args) {
-    if (cmd == MSG_HELP)
+    if (cmd == MSG_HELP || cmd[0] == MSG_HELP[0])
         showHelp();
-    else if (cmd == MSG_REPORT)
+    else if (cmd == MSG_REPORT || cmd[0] == MSG_REPORT[0])
         reportHandler();
-    else if (cmd == MSG_BUILDING)
+    else if (cmd == MSG_BUILDINGS || cmd[0] == MSG_BUILDINGS[0])
         printBuildings();
+    else if (cmd == MSG_EXIT || cmd[0] == MSG_EXIT[0])
+        exit(0);
     else
         log_->error("unknown command " + cmd + " with args " + vectorToString(args));
 }
@@ -128,29 +129,35 @@ void Company::showHelp() {
               << "Generates a report based on the specified type for a specific building.\n";
     std::cout << "\t- Available report types:\n";
     std::cout << "\t\t- mean: " << CYAN
-              << "Calculates the mean value of the specified resource for the given m.\n"
+              << "Calculates the mean value of the specified resource for the given month.\n"
               << RESET;
     std::cout << "\t\t- total: " << CYAN
-              << "Calculates the total value of the specified resource for the given m.\n"
+              << "Calculates the total value of the specified resource for the given month.\n"
               << RESET;
     std::cout << "\t\t- peak: " << CYAN
-              << "Finds the peak value of the specified resource for the given m.\n"
+              << "Finds the peak value of the specified resource for the given month.\n"
               << RESET;
     std::cout << "\t\t- difference: " << CYAN
               << "Calculates the difference between the peak and the mean value of the specified "
-                 "resource for the given m.\n"
+                 "resource for the given month.\n"
               << RESET;
     std::cout << "\t\t- bill: " << CYAN
-              << "Calculates the bill for the specified resource for the given m.\n"
+              << "Calculates the bill for the specified resource for the given month.\n"
               << RESET;
     std::cout << "\n";
     std::cout << RED << "2. help:\n" << RESET;
     std::cout << "\t- Usage: " << YELLOW << "help\n";
     std::cout << "\t- Description: " << RESET << "Displays this help file.\n";
+    std::cout << RED << "3. building:\n" << RESET;
+    std::cout << "\t- Usage: " << YELLOW << "building\n";
+    std::cout << "\t- Description: " << RESET << "Displays the list of buildings.\n";
+    std::cout << RED << "4. exit:\n" << RESET;
+    std::cout << "\t- Usage: " << YELLOW << "exit\n";
+    std::cout << "\t- Description: " << RESET << "Exits the program.\n";
 }
 
 void Company::reportHandler() {
-    std::string type = prompt("Enter report type(mean, total, peak, difference, bill): ");
+    std::string type = prompt("Enter report type(mean, total, max, difference, bill): ");
     std::string name = prompt("Enter building name: ");
     int index = findBuilding(name);
     if (index == -1) {
@@ -158,77 +165,84 @@ void Company::reportHandler() {
         return;
     }
     std::string resource = prompt("Enter resource name(Water, Gas, Electricity): ");
-    std::string m = prompt("Enter month number: ");
-    if (type == MSG_REPORT_FOR_MEAN) {
-        log_->info("Sending mean report request to building " + name);
-        mean(resource, m, index);
-        log_->info("Received mean report response from building " + name);
-    } else if (type == MSG_REPORT_FOR_TOTAL) {
-        log_->info("Sending total report request to building " + name);
-        total(resource, m, index);
-        log_->info("Received total report response from building " + name);
-    } else if (type == MSG_REPORT_FOR_PEAK) {
-        log_->info("Sending peak report request to building " + name);
-        getMax(resource, m, index);
-        log_->info("Received peak report response from building " + name);
-    } else if (type == MSG_REPORT_FOR_DIFFERENCE) {
-        log_->info("Sending difference report request to building " + name);
-        diff(resource, m, index);
-        log_->info("Received difference report response from building " + name);
-    } else if (type == MSG_REPORT_BILL) {
-        log_->info("Sending bill report request to building " + name);
-        bill(resource, m, index);
-        log_->info("Received bill report response from building " + name);
-    } else {
+    std::string month = prompt("Enter month number: ");
+    if (type == MSG_REPORT_FOR_MEAN || type[0] == MSG_REPORT_FOR_MEAN[0])
+        mean(resource, month, index, name);
+    else if (type == MSG_REPORT_FOR_TOTAL || type[0] == MSG_REPORT_FOR_TOTAL[0])
+        total(resource, month, index, name);
+    else if (type == MSG_REPORT_FOR_MAX || type[0] == MSG_REPORT_FOR_MAX[0])
+        getMax(resource, month, index, name);
+    else if (type == MSG_REPORT_FOR_DIFFERENCE || type[0] == MSG_REPORT_FOR_DIFFERENCE[0])
+        diff(resource, month, index, name);
+    else if (type == MSG_REPORT_BILL || type[0] == MSG_REPORT_BILL[0])
+        bill(resource, month, index, name);
+    else
         log_->error("Invalid report type: " + type);
-    }
 }
 
-void Company::mean(const std::string& resource, const std::string& m, int index) {
-    std::vector<std::string> resArgs = message(MSG_REPORT_FOR_MEAN, resource, m, index);
-    printRes(resArgs[0]);
+void Company::mean(const std::string& resource, const std::string& month, int index, const std::string& name) {
+    log_->info("Sending mean report request to building " + name);
+
+    std::vector<std::string> resArgs = message(MSG_REPORT_FOR_MEAN, resource, month, index, name);
+
+    log_->info("Received mean report response from building " + name);
+    printRes("Mean is: ", resArgs[0]);
 }
 
-void Company::total(const std::string& resource, const std::string& m, int index) {
-    std::vector<std::string> resArgs = message(MSG_REPORT_FOR_TOTAL, resource, m, index);
-    printRes(resArgs[0]);
+void Company::total(const std::string& resource, const std::string& month, int index, const std::string& name) {
+    log_->info("Sending total report request to building " + name);
+
+    std::vector<std::string> resArgs = message(MSG_REPORT_FOR_TOTAL, resource, month, index, name);
+
+    log_->info("Received total report response from building " + name);
+    printRes("Total cost is: ", resArgs[0]);
 }
 
-void Company::getMax(const std::string& resource, const std::string& m, int index) {
-    std::vector<std::string> resArgs = message(MSG_REPORT_FOR_PEAK, resource, m, index);
+void Company::getMax(const std::string& resource, const std::string& month, int index, const std::string& name) {
+    log_->info("Sending peak report request to building " + name);
+
+    std::vector<std::string> resArgs = message(MSG_REPORT_FOR_MAX, resource, month, index, name);
     std::string maxHours = "";
     for (const auto& hour : resArgs) maxHours += (hour + " ");
-    printRes(maxHours);
+
+    log_->info("Received peak report response from building " + name);
+    printRes("Max hour is: ", maxHours);
 }
 
-void Company::diff(const std::string& resource, const std::string& m, int index) {
-    std::vector<std::string> resArgs = message(MSG_REPORT_FOR_DIFFERENCE, resource, m, index);
-    printRes(resArgs[0]);
+void Company::diff(const std::string& resource, const std::string& month, int index, const std::string& name) {
+    log_->info("Sending difference report request to building " + name);
+
+    std::vector<std::string> resArgs = message(MSG_REPORT_FOR_DIFFERENCE, resource, month, index, name);
+
+    log_->info("Received difference report response from building " + name);
+    printRes("Difference is: ", resArgs[0]);
 }
 
 std::vector<std::string> Company::message(const std::string& msg, const std::string& resource,
-                 const std::string& m, int index) {
+                                          const std::string& month, int index, const std::string& name) {
     std::string buildingName = buildings_[index]->getName();
     std::vector<std::string> resArgs;
-    buildings_[index]->sendMessage(msg, {resource, m});
+    buildings_[index]->sendMessage(msg, {resource, month});
     buildings_[index]->receiveMessage(resArgs);
     return resArgs;
 }
 
-void Company::bill(const std::string& resource, const std::string& m, int index) {
+void Company::bill(const std::string& resource, const std::string& month, int index, const std::string& name) {
+    log_->info("Sending bill report request to building " + name);
+    
     std::string buildingName = buildings_[index]->getName();
     std::string financialName = finance_->getName();
 
-    std::vector<std::string> resArgs;
-    buildings_[index]->sendMessage(MSG_REPORT_BILL, {resource, m});
+    buildings_[index]->sendMessage(MSG_REPORT_BILL, {resource, month});
 
-    std::vector<std::string> financialArgs = {buildingName};
-    financialArgs.push_back(resource);
-    financialArgs.push_back(m);
+    std::vector<std::string> financialArgs = {buildingName, resource, month};
     finance_->sendMessage(MSG_REPORT_BILL, financialArgs);
+    
+    std::vector<std::string> resArgs;
     buildings_[index]->receiveMessage(resArgs);
 
-    printRes(resArgs[0]);
+    log_->info("Received bill report response from building " + name);
+    printRes("Bill cost is: ", resArgs[0]);
 }
 
 int Company::findBuilding(const std::string& name) {

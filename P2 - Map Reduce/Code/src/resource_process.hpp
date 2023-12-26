@@ -18,11 +18,11 @@ public:
 
 private:
     void handleCMD(const std::string& cmd, const std::vector<std::string>& args);
-    void mean(int m);
-    void total(int m);
-    void getMax(int m);
-    void diff(int m);
-    void bill(int m, std::string rt, int p);
+    void mean(int month);
+    void total(int month);
+    void getMax(int month);
+    void diff(int month);
+    void bill(int month, std::string rt, int p);
 
     Logger* log_;
     std::string name_;

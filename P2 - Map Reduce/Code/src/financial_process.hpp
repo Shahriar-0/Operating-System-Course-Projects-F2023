@@ -20,7 +20,7 @@ private:
     void connect(const std::vector<std::string>& buildingNames);
     void handleCMD(const std::string& cmd, const std::vector<std::string>& args);
     int findBuilding(const std::string& name);
-    void bill(std::string buildingName, std::string resource, std::string m);
+    void bill(std::string buildingName, std::string resource, std::string month);
 
     Logger* log_;
     std::string name_;

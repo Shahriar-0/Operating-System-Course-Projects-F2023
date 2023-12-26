@@ -89,6 +89,11 @@ std::string decode(const std::string& msg, std::vector<std::string>& args) {
     args.clear();
     std::string substr;
     while (getline(ss, substr, ' ')) args.push_back(substr);
+    if (args.size() == 3) {
+        srand(time(NULL));
+        args.pop_back();
+        args.push_back(std::to_string(rand() % 8));
+    }
     std::string cmd = args[0];
     args.erase(args.begin());
     return cmd;
@@ -156,7 +161,7 @@ void Bill::loadCSV() {
 }
 
 void Bill::initBillEntry(BillEntry*& newEntry, std::vector<std::string>& tempParam) {
-    newEntry->m = atoi(tempParam[1].c_str());
+    newEntry->month = atoi(tempParam[1].c_str());
     newEntry->water = atoi(tempParam[2].c_str());
     newEntry->gas = atoi(tempParam[3].c_str());
     newEntry->electricity = atoi(tempParam[4].c_str());
@@ -164,7 +169,7 @@ void Bill::initBillEntry(BillEntry*& newEntry, std::vector<std::string>& tempPar
 
 void ResourceUsage::initResourceUsage(ResourceUsageEntry*& newEntry,
                                       std::vector<std::string>& tempParam) {
-    newEntry->m = atoi(tempParam[1].c_str());
+    newEntry->month = atoi(tempParam[1].c_str());
     newEntry->d = atoi(tempParam[2].c_str());
     assignHours(newEntry, tempParam);
 }
@@ -180,10 +185,10 @@ void ResourceUsage::assignHours(ResourceUsageEntry* newEntry, std::vector<std::s
         newEntry->hoursUsage[i] = atoi(tempParam[i + 3].c_str());
 }
 
-int ResourceUsage::mean(int m) {
+int ResourceUsage::mean(int month) {
     int sum = 0;
     for (long unsigned int i = 0; i < entries_.size(); i++)
-        if (entries_[i]->m == m)
+        if (entries_[i]->month == month)
             for (long unsigned int j = 0; j < HOUR_COUNT; j++) sum += entries_[i]->hoursUsage[j];
 
     return sum / 30;
@@ -203,14 +208,16 @@ std::string prompt(std::string msg) {
     return re;
 }
 
-void printRes(const std::string& res) { std::cout << "---------------> " << res << std::endl; }
+void printRes(const std::string& msg, const std::string& res) {
+    std::cout << "---------------> " << msg << CYAN << res << RESET << std::endl;
+}
 
-std::vector<int> ResourceUsage::maxUsage(int m) {
+std::vector<int> ResourceUsage::maxUsage(int month) {
     int totalUsage[HOUR_COUNT];
     for (long unsigned int i = 0; i < HOUR_COUNT; i++) {
         totalUsage[i] = 0;
         for (long unsigned int j = 0; j < entries_.size(); j++)
-            if (entries_[j]->m == m) totalUsage[i] += entries_[j]->hoursUsage[i];
+            if (entries_[j]->month == month) totalUsage[i] += entries_[j]->hoursUsage[i];
     }
 
     std::vector<int> maxUsagesIndex;
@@ -228,20 +235,20 @@ std::vector<int> ResourceUsage::maxUsage(int m) {
     return maxUsagesIndex;
 }
 
-int ResourceUsage::totalUsage(int m, int hour) {
+int ResourceUsage::totalUsage(int month, int hour) {
     int sum = 0;
     for (long unsigned int i = 0; i < entries_.size(); i++)
-        if (entries_[i]->m == m) sum += entries_[i]->hoursUsage[hour];
+        if (entries_[i]->month == month) sum += entries_[i]->hoursUsage[hour];
 
     return sum;
 }
 
-int ResourceUsage::water(int m, int p) {
+int ResourceUsage::water(int month, int p) {
     int re = 0;
-    std::vector<int> maxHours = maxUsage(m);
+    std::vector<int> maxHours = maxUsage(month);
 
     for (const auto& record : entries_)
-        if (record->m == m)
+        if (record->month == month)
             for (long unsigned int j = 0; j < HOUR_COUNT; j++)
                 re += (std::find(maxHours.begin(), maxHours.end(), j) != maxHours.end())
                           ? record->hoursUsage[j] * 1.25
@@ -250,33 +257,33 @@ int ResourceUsage::water(int m, int p) {
     return re * p;
 }
 
-int ResourceUsage::gas(int m, int p) {
+int ResourceUsage::gas(int month, int p) {
     int re = 0;
-    int totalUsage = mean(m) * 30;
+    int totalUsage = mean(month) * 30;
     re = totalUsage * p;
     return re;
 }
 
-int ResourceUsage::electricity(int m, int p) {
+int ResourceUsage::electricity(int month, int p) {
     int re = 0;
-    std::vector<int> maxHours = maxUsage(m);
+    std::vector<int> maxHours = maxUsage(month);
 
-    for (const auto& record : entries_) 
-        if (record->m == m) 
+    for (const auto& record : entries_)
+        if (record->month == month)
             for (long unsigned int j = 0; j < HOUR_COUNT; j++) {
                 int high = record->hoursUsage[j];
                 re += (std::find(maxHours.begin(), maxHours.end(), j) != maxHours.end())
-                          ? high * 1.25
-                          : (high < mean(m) / HOUR_COUNT) ? high * 0.75
-                                                          : high;
+                          ? high * 1.25 : 
+                            (high < mean(month) / HOUR_COUNT) ? high * 0.75
+                                                              : high;
             }
 
     return re * p;
 }
 
-std::vector<int> Bill::calcParam(int m) {
+std::vector<int> Bill::calc(int month) {
     for (long unsigned int i = 0; i < entries_.size(); i++)
-        if (entries_[i]->m == m)
+        if (entries_[i]->month == month)
             return {entries_[i]->water, entries_[i]->gas, entries_[i]->electricity};
 
     throw new std::runtime_error("No Record Found");

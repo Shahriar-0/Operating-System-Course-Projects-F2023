@@ -56,7 +56,7 @@ void Building::handleCMD(const std::string& cmd, const std::vector<std::string>&
         log_->info("Calling total function");
         total(args[0], args[1]);
         log_->info("Total function call completed");
-    } else if (cmd == MSG_REPORT_FOR_PEAK) {
+    } else if (cmd == MSG_REPORT_FOR_MAX) {
         log_->info("Calling getMax function");
         getMax(args[0], args[1]);
         log_->info("getMax function call completed");
@@ -84,7 +84,7 @@ void Building::total(std::string rt, std::string mNumber) {
 }
 
 void Building::getMax(std::string rt, std::string mNumber) {
-    std::vector<std::string> resArgs = message(MSG_REPORT_FOR_PEAK, rt, mNumber);
+    std::vector<std::string> resArgs = message(MSG_REPORT_FOR_MAX, rt, mNumber);
     writefd(STDOUT_FILENO, MSG_RESPONSE, resArgs);
 }
 

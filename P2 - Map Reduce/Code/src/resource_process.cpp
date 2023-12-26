@@ -29,7 +29,7 @@ void Resource::handleCMD(const std::string& cmd, const std::vector<std::string>&
         total(stoi(args[0]));
         log_->info("Total function called");
     }
-    else if (cmd == MSG_REPORT_FOR_PEAK) {
+    else if (cmd == MSG_REPORT_FOR_MAX) {
         log_->info("Calling getMax function");
         getMax(stoi(args[0]));
         log_->info("getMax function called");
@@ -41,44 +41,44 @@ void Resource::handleCMD(const std::string& cmd, const std::vector<std::string>&
     }
     else if (cmd == MSG_REPORT_BILL) {
         log_->info("Calling bill function");
-        bill(stoi(args[0]), args[1], stoi(args[2]));
+        bill(stoi(args[0]), args[1], 5);
         log_->info("bill function called");
     }
     else 
         log_->error("Unknown command");
 }
 
-void Resource::mean(int m) {
-    int re = data_->mean(m);
+void Resource::mean(int month) {
+    int re = data_->mean(month);
     writefd(STDOUT_FILENO, MSG_RESPONSE, {std::to_string(re)});
 }
 
-void Resource::total(int m) {
-    int re = data_->mean(m) * 30;
+void Resource::total(int month) {
+    int re = data_->mean(month) * 30;
     writefd(STDOUT_FILENO, MSG_RESPONSE, {std::to_string(re)});
 }
 
-void Resource::getMax(int m) {
-    std::vector<int> tempRes = data_->maxUsage(m);
+void Resource::getMax(int month) {
+    std::vector<int> tempRes = data_->maxUsage(month);
     std::vector<std::string> re;
     for (long unsigned int i = 0; i < tempRes.size(); i++) re.push_back(std::to_string(tempRes[i]));
     writefd(STDOUT_FILENO, MSG_RESPONSE, re);
 }
 
-void Resource::diff(int m) {
-    int re = data_->diff(m);
+void Resource::diff(int month) {
+    int re = data_->diff(month);
     writefd(STDOUT_FILENO, MSG_RESPONSE, {std::to_string(re)});
 }
 
-void Resource::bill(int m, std::string rt, int p) {
+void Resource::bill(int month, std::string rt, int p) {
     int re;
 
     if (rt == WATER)
-        re = data_->water(m, p);
+        re = data_->water(month, p);
     else if (rt == GAS)
-        re = data_->gas(m, p);
+        re = data_->gas(month, p);
     else if (rt == ELECTRICITY)
-        re = data_->electricity(m, p);
+        re = data_->electricity(month, p);
     else 
         log_->error("Unknown resource type");
     

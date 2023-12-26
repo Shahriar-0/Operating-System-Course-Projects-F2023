@@ -1,8 +1,8 @@
 include common_vars.mk
 
-EXE_COMPANY   := company.out
-EXE_FINANCIAL := financial.out
-EXE_BUILDING  := building.out
+EXE_COMPANY      := company.out
+EXE_FINANCIAL    := financial.out
+EXE_BUILDING     := building.out
 EXE_RESOURCE     := resource.out
 
 VPATH = $(PATH_SRC)
@@ -67,11 +67,11 @@ clean: clean-obj clean-dep clean-exe clean-fifos clean-logs
 clean-obj   : ; $(RMDIR) $(PATH_OBJ)/*
 clean-dep   : ; $(RMDIR) $(PATH_DEP)/* 
 clean-fifos : ; $(RMDIR) $(PATH_BUILD)/fifos/* 
-clean-logs  : ; $(RMDIR) $(PATH_BUILD)/logs/*
+clean-logs  : ; $(RMDIR) logs/*
 clean-exe   : ; $(RMDIR) $(PATH_BIN)/$(EXE_COMPANY) $(PATH_BIN)/$(EXE_FINANCIAL) $(PATH_BIN)/$(EXE_BUILDING) $(PATH_BIN)/$(EXE_RESOURCE)
 
 ARGS ?=
-run: ; @cd $(PATH_BIN) && ./$(EXE_COMPANY) "../../buildings"
+run: ; @cd $(PATH_BIN) && ./$(EXE_COMPANY) $(ARGS)
 
 help:
 	@echo Targets: all clean clean-obj clean-dep clean-exe delete-build run

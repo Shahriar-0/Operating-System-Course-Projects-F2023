@@ -9,10 +9,10 @@ class ConsoleLogger : public Logger {
 public:
     ConsoleLogger(const std::string& name) : Logger(name) {}
     virtual void info(const std::string& msg) override {
-        std::cout << BLUE << name_ << ": " << msg << RESET << std::endl;
+        std::cout << GREEN << name_ << ": " << RESET << CYAN << msg << RESET << std::endl;
     }
     virtual void error(const std::string& msg) override {
-        std::cerr << RED << name_ << ": " << msg << RESET << std::endl;
+        std::cerr << GREEN << name_ << ": " << RESET << RED << msg << RESET << std::endl;
     }
 };
 

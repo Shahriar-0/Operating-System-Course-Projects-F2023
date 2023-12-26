@@ -1,6 +1,6 @@
 PATH_SRC   := src
 PATH_BUILD := build
-PATH_BIN   := $(PATH_BUILD)/bin
+PATH_BIN   := bin
 PATH_OBJ   := $(PATH_BUILD)/obj
 PATH_DEP   := $(PATH_OBJ)/__dep__
 

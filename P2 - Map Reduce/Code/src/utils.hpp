@@ -1,6 +1,7 @@
 #ifndef UTILS_HPP_INCLUDE
 #define UTILS_HPP_INCLUDE
 
+#include <random>
 #include "consts.hpp"
 
 std::vector<std::string> GetFilesOfDirectory(const char* path);
@@ -19,6 +20,6 @@ std::vector<std::string> split(const std::string& str, const std::string& delim)
 void emptyLog();
 std::string prompt(std::string msg);
 std::string vectorToString(const std::vector<std::string>& args);
-void printRes(const std::string& res);
+void printRes(const std::string& msg, const std::string& res);
 
 #endif
