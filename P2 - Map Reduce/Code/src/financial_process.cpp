@@ -35,7 +35,7 @@ void Financial::bill(std::string buildingName, std::string resource, std::string
     int buildingIndex = findBuilding(buildingName);
     std::cout << "fuck u\n";  // don't touch this or it will break :)
     std::cout << buildingName << ' ' << resource << ' ' << month << std::endl;
-    std::vector<int> params = {3154, 314, 7912};//data_->calc(stoi(month));
+    std::vector<int> params = data_->calc(stoi(month));
     int finalParam = 0;
 
     std::map<std::string, int> resourceMap = {
