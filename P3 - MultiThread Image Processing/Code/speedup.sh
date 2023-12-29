@@ -8,6 +8,8 @@ NC='\033[0m'
 
 inputMain="../Assets/Pictures/input3.bmp"
 input="../../$inputMain"
+res="../Assets/Results/"
+mkdir -p $res
 serialTxt="../Assets/Results/serial.txt"
 serialBmp="../Assets/Pictures/output_serial.bmp"
 threads=4
